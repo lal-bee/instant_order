@@ -27,8 +27,10 @@ import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -62,6 +64,10 @@ public class OrderServiceImpl implements OrderService {
     private String shopAddress;
     @Value("${hanye.baidu.ak}")
     private String ak;
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    private static final String SCAN_PARAMS_KEY_PREFIX = "scan_params:user:";
 
     /**
      * 用户下单
@@ -70,13 +76,34 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     public OrderSubmitVO submit(OrderSubmitDTO orderSubmitDTO) {
-        // 1、查询校验地址情况
-        AddressBook addressBook = addressBookMapper.getById(orderSubmitDTO.getAddressId());
-        if (addressBook == null) {
-            throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
+        // 1、地址或堂食（storeId+tableId）
+        Integer addressId = orderSubmitDTO.getAddressId();
+        Long storeId = orderSubmitDTO.getStoreId();
+        String tableId = orderSubmitDTO.getTableId();
+        // 堂食但请求未带 storeId/tableId 时，从 Redis 取出（正式发布后扫码参数存 Redis）
+        if (addressId == null && (storeId == null || !StringUtils.hasText(tableId))) {
+            Integer userId = BaseContext.getCurrentId();
+            String key = SCAN_PARAMS_KEY_PREFIX + userId;
+            Object cached = redisTemplate.opsForValue().get(key);
+            if (cached != null && cached.toString().contains(":")) {
+                String[] parts = cached.toString().split(":", 2);
+                storeId = Long.parseLong(parts[0].trim());
+                tableId = parts[1].trim();
+                orderSubmitDTO.setStoreId(storeId);
+                orderSubmitDTO.setTableId(tableId);
+            }
         }
-        // 不能超出配送范围
-        // checkOutOfRange(addressBook.getCityName() + addressBook.getDistrictName() + addressBook.getDetail());
+        boolean isInStore = (addressId == null && storeId != null && StringUtils.hasText(tableId));
+        if (!isInStore && addressId == null) {
+            throw new OrderBusinessException(MessageConstant.SCAN_PARAMS_REQUIRED);
+        }
+        AddressBook addressBook = null;
+        if (!isInStore) {
+            addressBook = addressBookMapper.getById(orderSubmitDTO.getAddressId());
+            if (addressBook == null) {
+                throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
+            }
+        }
         // 2、查询校验购物车情况
         Integer userId = BaseContext.getCurrentId();
         Cart cart = new Cart();
@@ -88,10 +115,17 @@ public class OrderServiceImpl implements OrderService {
         // 3、构建订单数据
         Order order = new Order();
         BeanUtils.copyProperties(orderSubmitDTO, order);
-        order.setAddressBookId(orderSubmitDTO.getAddressId());
-        order.setPhone(addressBook.getPhone());
-        order.setAddress(addressBook.getDetail());
-        order.setConsignee(addressBook.getConsignee());
+        if (isInStore) {
+            order.setAddressBookId(null);
+            order.setAddress("堂食-门店" + orderSubmitDTO.getStoreId() + "-桌" + orderSubmitDTO.getTableId());
+            order.setPhone("");
+            order.setConsignee("堂食");
+        } else {
+            order.setAddressBookId(orderSubmitDTO.getAddressId());
+            order.setPhone(addressBook.getPhone());
+            order.setAddress(addressBook.getDetail());
+            order.setConsignee(addressBook.getConsignee());
+        }
         // 利用时间戳来生成当前订单的编号
         order.setNumber(String.valueOf(System.currentTimeMillis()));
         order.setUserId(userId);
@@ -258,27 +292,31 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     public OrderPaymentVO payment(OrderPaymentDTO orderPaymentDTO) {
-        // 当前登录用户id
-        Integer userId = BaseContext.getCurrentId();
-        User user = userMapper.getById(userId);
-        // 调用微信支付接口，生成预支付交易单
-        // 暂时不做，而是把 weChatUtils 里相关的参数设置好，让后续代码不出问题
+        // 按订单号查询订单，避免使用实例变量 this.order（多请求会错乱）
+        Order order = orderMapper.getByNumber(orderPaymentDTO.getOrderNumber());
+        if (order == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if (!order.getUserId().equals(BaseContext.getCurrentId())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        if (Order.PAID.equals(order.getPayStatus())) {
+            throw new OrderBusinessException("订单已支付");
+        }
+        // 暂不调微信支付，直接更新为已支付
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", "ORDERPAID");
-        // 抽取 paySuccess 的代码：不搞支付，修改订单状态后直接更新数据库，并返回给前端
         OrderPaymentVO vo = jsonObject.toJavaObject(OrderPaymentVO.class);
         vo.setPackageStr(jsonObject.getString("package"));
-        Integer OrderPaidStatus = Order.PAID; // 支付状态，已支付
-        Integer OrderStatus = Order.TO_BE_CONFIRMED;  // 订单状态，待接单
-        LocalDateTime checkOutTime = LocalDateTime.now(); // 更新支付时间
-        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, checkOutTime, this.order.getId());
+        Integer OrderPaidStatus = Order.PAID;
+        Integer OrderStatus = Order.TO_BE_CONFIRMED;
+        LocalDateTime checkOutTime = LocalDateTime.now();
+        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, checkOutTime, order.getId());
 
-        // 由于跳过了微信支付，因此没有通过微信来调用paySuccess方法，所以把里面的消息提醒方法抽出来放到这里！
-        // 通过websocket向客户端浏览器推送消息 type orderId content
         Map map = new HashMap();
-        map.put("type", 1); // 消息类型，1表示来单提醒（2表示客户催单）
-        map.put("orderId", this.order.getId());
-        map.put("content", "订单号：" + this.order.getNumber());
+        map.put("type", 1);
+        map.put("orderId", order.getId());
+        map.put("content", "订单号：" + order.getNumber());
         String json = JSON.toJSONString(map);
         log.info("发给商家端啊！：{}", map);
         webSocketServer.sendToAllClient(json);

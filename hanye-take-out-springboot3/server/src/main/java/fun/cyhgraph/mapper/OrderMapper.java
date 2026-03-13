@@ -20,6 +20,9 @@ public interface OrderMapper {
     @Select("select * from orders where id = #{id}")
     Order getById(Integer id);
 
+    @Select("select * from orders where number = #{number}")
+    Order getByNumber(String number);
+
     Page<Order> page(OrderPageDTO orderPageDTO);
 
     void update(Order order);

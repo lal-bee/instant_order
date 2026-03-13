@@ -1,0 +1,21 @@
+{
+  "name": "instant-order-user",
+  "private": true,
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=20.20.0"
+  },
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.0",
+    "pinia": "^2.1.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "^5.0.8"
+  }
+}

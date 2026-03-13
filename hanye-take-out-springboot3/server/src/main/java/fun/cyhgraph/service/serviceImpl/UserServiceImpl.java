@@ -31,6 +31,10 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
 
 
+    /** H5 无微信环境时前端传的模拟 code，后端兼容后直接使用固定 openid，不调微信接口 */
+    private static final String H5_MOCK_CODE = "H5_MOCK";
+    private static final String H5_MOCK_OPENID = "H5_MOCK_OPENID";
+
     /**
      * 用户微信登录
      *
@@ -38,9 +42,14 @@ public class UserServiceImpl implements UserService {
      * @return
      */
     public User wxLogin(UserLoginDTO userLoginDTO) {
-        // 调用私有方法，其中利用HttpClient来调用微信API服务，获取openid
-        String openid = getOpenId(userLoginDTO.getCode());
-        // 判断openid是否为空，如果为空表示登录失败，抛出业务异常
+        String code = userLoginDTO.getCode();
+        String openid;
+        if (H5_MOCK_CODE.equals(code)) {
+            // H5 模拟登录：不调微信，使用固定 openid
+            openid = H5_MOCK_OPENID;
+        } else {
+            openid = getOpenId(code);
+        }
         if (openid == null) {
             throw new LoginFailedException(MessageConstant.LOGIN_FAILED);
         }

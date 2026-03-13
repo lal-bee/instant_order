@@ -124,7 +124,7 @@ create table orders (
     number varchar(50) default null comment '订单号',
     status int not null default '1' comment '订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消 7退款',
     user_id bigint not null comment '下单用户',
-    address_book_id bigint not null comment '地址id',
+    address_book_id bigint default null comment '地址id（堂食为null）',
     order_time datetime not null comment '下单时间',
     checkout_time datetime default null comment '结账时间',
     pay_method int not null default '1' comment '支付方式 1微信,2支付宝',
