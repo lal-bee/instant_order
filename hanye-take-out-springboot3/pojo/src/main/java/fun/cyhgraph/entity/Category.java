@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class Category {
 
     private Integer id;
+    private Long headquartersId;
     private String name;
     private Integer type;
     private Integer sort;

@@ -7,6 +7,7 @@ import fun.cyhgraph.dto.DishPageDTO;
 import fun.cyhgraph.entity.Dish;
 import fun.cyhgraph.enumeration.OperationType;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
@@ -31,6 +32,10 @@ public interface DishMapper {
     void onOff(Integer id);
 
     List<Dish> getList(Dish dish);
+
+    List<Dish> getListByStoreAndCategory(@Param("storeId") Long storeId, @Param("categoryId") Integer categoryId);
+
+    List<Dish> getByHeadquartersId(Long headquartersId);
 
     @Select("select count(id) from dish where status = #{i}")
     Integer getByStatus(int i);

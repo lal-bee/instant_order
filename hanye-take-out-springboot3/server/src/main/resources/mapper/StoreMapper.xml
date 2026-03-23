@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fun.cyhgraph.mapper.StoreMapper">
+
+    <select id="getListWithDetail" resultType="fun.cyhgraph.entity.Store">
+        select s.*, h.name as headquarters_name, e.name as manager_name
+        from store s
+                 left join headquarters h on s.headquarters_id = h.id
+                 left join employee e on s.manager_employee_id = e.id
+        order by s.id asc
+    </select>
+
+    <update id="update">
+        update store
+        <set>
+            <if test="headquartersId != null">headquarters_id = #{headquartersId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="managerEmployeeId != null">manager_employee_id = #{managerEmployeeId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+</mapper>

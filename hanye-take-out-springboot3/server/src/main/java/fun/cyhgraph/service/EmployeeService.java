@@ -7,6 +7,8 @@ import fun.cyhgraph.dto.PageDTO;
 import fun.cyhgraph.entity.Employee;
 import fun.cyhgraph.result.PageResult;
 
+import java.util.List;
+
 public interface EmployeeService {
     Employee getEmployeeById(Integer id);
 
@@ -19,6 +21,8 @@ public interface EmployeeService {
     void update(EmployeeDTO employeeDTO);
 
     void delete(Integer id);
+
+    void deleteBatch(List<Integer> ids);
 
     void onOff(Integer id);
 

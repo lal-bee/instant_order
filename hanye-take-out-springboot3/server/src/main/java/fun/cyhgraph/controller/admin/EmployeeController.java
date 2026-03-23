@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -49,6 +50,8 @@ public class EmployeeController {
         EmployeeLoginVO employeeLoginVO = EmployeeLoginVO.builder()
                 .id(employee.getId())
                 .account(employee.getAccount())
+                .storeId(employee.getStoreId())
+                .role(employee.getRole())
                 .token(token)
                 .build();
         return Result.success(employeeLoginVO);
@@ -144,6 +147,16 @@ public class EmployeeController {
     public Result delete(@PathVariable Integer id){
         log.info("根据id删除员工,{}", id);
         employeeService.delete(id);
+        return Result.success();
+    }
+
+    /**
+     * 批量删除员工
+     */
+    @DeleteMapping("/delete/batch")
+    public Result deleteBatch(@RequestParam List<Integer> ids) {
+        log.info("批量删除员工,{}", ids);
+        employeeService.deleteBatch(ids);
         return Result.success();
     }
 }

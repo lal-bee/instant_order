@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fun.cyhgraph.mapper.StoreDishMapper">
+
+    <insert id="add">
+        insert into store_dish (store_id, dish_id, status, create_user, update_user, create_time, update_time)
+        values (#{storeId}, #{dishId}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="getDishIdsByStoreIdAndCategoryId" resultType="java.lang.Integer">
+        select sd.dish_id
+        from store_dish sd
+                 left join dish d on sd.dish_id = d.id
+        where sd.store_id = #{storeId}
+          and sd.status = 1
+          and d.category_id = #{categoryId}
+          and d.status = 1
+    </select>
+
+</mapper>

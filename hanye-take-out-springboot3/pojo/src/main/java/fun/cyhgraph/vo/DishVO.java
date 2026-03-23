@@ -26,6 +26,7 @@ public class DishVO implements Serializable {
     private BigDecimal price;
     private String status;
     private Integer categoryId;
+    private Long headquartersId;
     // 修改了数据，要返回更新时间的字段
     private LocalDateTime updateTime;
     private List<DishFlavor> flavors = new ArrayList<>();

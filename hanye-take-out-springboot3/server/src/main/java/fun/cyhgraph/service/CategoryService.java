@@ -14,6 +14,8 @@ public interface CategoryService {
 
     List<Category> getList(Integer type);
 
+    List<Category> getListByStoreId(Long storeId, Integer type);
+
     Category getById(Integer id);
     void onOff(Integer id);
 

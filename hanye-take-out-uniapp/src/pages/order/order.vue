@@ -170,6 +170,8 @@ const categoryList = ref<CategoryItem[]>([])
 const activeIndex = ref(0)
 // 高亮口味下标
 const activeFlavorIndex = ref(0)
+// 当前门店ID
+const currentStoreId = ref(1)
 // 菜品/套餐列表
 const dishList = ref<(DishItem | SetmealItem)[]>([])
 // 套餐列表
@@ -190,7 +192,7 @@ const chosedflavors = ref<string[]>([])
 
 // ------ method ------
 const getCategoryData = async () => {
-  const res = await getCategoryAPI()
+  const res = await getCategoryAPI(currentStoreId.value)
   console.log(res)
   categoryList.value = res.data
   console.log('categoryList', categoryList.value)
@@ -202,7 +204,7 @@ const getDishOrSetmealList = async (index: number) => {
   console.log('getList by this category', categoryList.value[index])
   let res
   if (categoryList.value[index].type === 1) {
-    res = await getDishListAPI(categoryList.value[index].id)
+    res = await getDishListAPI(categoryList.value[index].id, currentStoreId.value)
   } else {
     res = await getSetmealListAPI(categoryList.value[index].id)
   }
@@ -392,7 +394,10 @@ const goBack = () => {
 }
 
 // 页面加载
-onLoad(async () => {
+onLoad(async (option) => {
+  if (option && option.storeId) {
+    currentStoreId.value = Number(option.storeId)
+  }
   const res = await getStatusAPI()
   console.log('店铺状态---------', res)
   status.value = res.data === 1 ? true : false

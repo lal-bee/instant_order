@@ -2,7 +2,7 @@
 import { RouterView, useRouter, useRoute } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useUserInfoStore } from '@/store'
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
 import { fixPwdAPI } from '@/api/employee'
 import { getStatusAPI, fixStatusAPI } from '@/api/shop'
 import { ElNotification } from 'element-plus'
@@ -12,8 +12,9 @@ const dialogFormVisible = ref(false)
 const dialogStatusVisible = ref(false)
 const formLabelWidth = '80px'
 const isCollapse = ref(false)
+const userInfoStore = useUserInfoStore()
 
-const menuList = [
+const rawMenuList = [
   {
     title: '控制台',
     path: '/dashboard',
@@ -30,19 +31,29 @@ const menuList = [
     icon: 'collection',
   },
   {
-    title: '分类管理',
-    path: '/category',
-    icon: 'postcard',
-  },
-  {
     title: '套餐管理',
     path: '/setmeal',
     icon: 'user',
   },
   {
-    title: '菜品管理',
+    title: '标准菜品管理',
     path: '/dish',
     icon: 'dish',
+  },
+  {
+    title: '总店管理',
+    path: '/headquarters',
+    icon: 'officeBuilding',
+  },
+  {
+    title: '分店管理',
+    path: '/store',
+    icon: 'shop',
+  },
+  {
+    title: '门店菜单配置',
+    path: '/store-menu',
+    icon: 'tickets',
   },
   {
     title: '员工管理',
@@ -50,6 +61,19 @@ const menuList = [
     icon: 'setting',
   },
 ]
+const roleLevel = (role: string | number | undefined | null) => {
+  if (role === 2 || role === '2' || role === 'CHAIRMAN') return 2
+  if (role === 1 || role === '1' || role === 'MANAGER') return 1
+  if (role === 0 || role === '0' || role === 'EMPLOYEE') return 0
+  return -1
+}
+const menuList = computed(() => {
+  const role = userInfoStore.userInfo?.role
+  if (roleLevel(role) === 2) {
+    return rawMenuList
+  }
+  return rawMenuList.filter(item => !['/headquarters', '/store', '/store-menu'].includes(item.path))
+})
 
 const form = reactive({
   oldPwd: '',
@@ -92,7 +116,6 @@ const rules = { // 表单的规则检验对象
 
 // ------ method ------
 const router = useRouter()
-const userInfoStore = useUserInfoStore()
 const route = useRoute();
 // 根据当前路由的路径返回要激活的菜单项
 const getActiveAside = () => {

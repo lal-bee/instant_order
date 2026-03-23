@@ -71,6 +71,16 @@ export const getEmployeePageListAPI = (params: any) => {
 }
 
 /**
+ * 获取当前登录员工详情
+ */
+export const getCurrentEmployeeAPI = (id: number) => {
+  return request({
+    url: `/employee/${id}`,
+    method: 'get',
+  })
+}
+
+/**
  * 根据id获取员工信息，用于回显
  * @param id 员工id
  * @returns 
@@ -117,5 +127,17 @@ export const deleteEmployeeAPI = (id: number) => {
   return request({
     url: `/employee/delete/${id}`,
     method: 'delete'
+  })
+}
+
+/**
+ * 批量删除员工
+ * @param ids 员工id数组
+ */
+export const deleteEmployeeBatchAPI = (ids: number[]) => {
+  return request({
+    url: '/employee/delete/batch',
+    method: 'delete',
+    params: { ids: ids.join(',') },
   })
 }

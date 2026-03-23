@@ -16,4 +16,6 @@ public class PageDTO implements Serializable {
     private int page;
     private int pageSize;
     private String name;
+    private Long storeId;
+    private String role;
 }

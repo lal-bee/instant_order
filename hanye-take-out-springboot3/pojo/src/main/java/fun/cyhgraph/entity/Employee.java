@@ -20,6 +20,9 @@ public class Employee implements Serializable {
     private Integer age;
     private Integer gender;
     private String pic;
+    private Long storeId;
+    private String role;
+    private String storeName;
     private Integer status;
     private Integer createUser;
     private Integer updateUser;

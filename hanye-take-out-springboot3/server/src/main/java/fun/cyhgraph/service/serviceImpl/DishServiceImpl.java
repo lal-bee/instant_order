@@ -4,16 +4,21 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import fun.cyhgraph.constant.MessageConstant;
 import fun.cyhgraph.constant.StatusConstant;
+import fun.cyhgraph.context.BaseContext;
 import fun.cyhgraph.dto.DishDTO;
 import fun.cyhgraph.dto.DishPageDTO;
 import fun.cyhgraph.entity.Dish;
 import fun.cyhgraph.entity.DishFlavor;
-import fun.cyhgraph.entity.Setmeal;
+import fun.cyhgraph.entity.Employee;
+import fun.cyhgraph.entity.Store;
+import fun.cyhgraph.enumeration.RoleEnum;
 import fun.cyhgraph.exception.DeleteNotAllowedException;
+import fun.cyhgraph.exception.BaseException;
 import fun.cyhgraph.mapper.DishFlavorMapper;
 import fun.cyhgraph.mapper.DishMapper;
+import fun.cyhgraph.mapper.EmployeeMapper;
 import fun.cyhgraph.mapper.SetmealDishMapper;
-import fun.cyhgraph.mapper.SetmealMapper;
+import fun.cyhgraph.mapper.StoreMapper;
 import fun.cyhgraph.result.PageResult;
 import fun.cyhgraph.service.DishService;
 import fun.cyhgraph.vo.DishVO;
@@ -33,12 +38,17 @@ public class DishServiceImpl implements DishService {
     private DishFlavorMapper dishFlavorMapper;
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private EmployeeMapper employeeMapper;
+    @Autowired
+    private StoreMapper storeMapper;
 
     /**
      * 新增菜品
      * @param dishDTO
      */
     public void addDishWithFlavor(DishDTO dishDTO) {
+        dishDTO.setHeadquartersId(resolveHeadquartersId(dishDTO.getHeadquartersId()));
         // 不仅要向dish表添加数据，还要向dish_flavor表添加口味数据
         Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO, dish);
@@ -66,6 +76,7 @@ public class DishServiceImpl implements DishService {
      * @return
      */
     public PageResult getPageList(DishPageDTO dishPageDTO) {
+        dishPageDTO.setHeadquartersId(resolveHeadquartersId(dishPageDTO.getHeadquartersId()));
         PageHelper.startPage(dishPageDTO.getPage(), dishPageDTO.getPageSize());
         Page<Dish> dishList = dishMapper.getPageList(dishPageDTO);
         return new PageResult(dishList.getTotal(), dishList.getResult());
@@ -92,6 +103,7 @@ public class DishServiceImpl implements DishService {
      * @param dishDTO
      */
     public void updateDishWithFlavor(DishDTO dishDTO) {
+        dishDTO.setHeadquartersId(resolveHeadquartersId(dishDTO.getHeadquartersId()));
         Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO, dish);
         // 先根据id更新菜品数据
@@ -156,6 +168,40 @@ public class DishServiceImpl implements DishService {
             dishVOList.add(dishVO);
         }
         return dishVOList;
+    }
+
+    @Override
+    public List<DishVO> getStoreDishesByCategory(Long storeId, Integer categoryId) {
+        List<Dish> dishList = dishMapper.getListByStoreAndCategory(storeId, categoryId);
+        List<DishVO> dishVOList = new ArrayList<>();
+        for (Dish d : dishList) {
+            DishVO dishVO = new DishVO();
+            BeanUtils.copyProperties(d, dishVO);
+            List<DishFlavor> flavors = dishFlavorMapper.getByDishId(d.getId());
+            dishVO.setFlavors(flavors);
+            dishVOList.add(dishVO);
+        }
+        return dishVOList;
+    }
+
+    private Long resolveHeadquartersId(Long requestHeadquartersId) {
+        Integer currentEmployeeId = BaseContext.getCurrentId();
+        Employee current = employeeMapper.getById(currentEmployeeId);
+        if (current == null) {
+            throw new BaseException("当前登录员工不存在");
+        }
+        if (RoleEnum.CHAIRMAN.name().equals(current.getRole())) {
+            // 董事长支持全局操作：未指定总部时不按总部过滤
+            return requestHeadquartersId;
+        }
+        if (current.getStoreId() == null) {
+            return requestHeadquartersId;
+        }
+        Store store = storeMapper.getById(current.getStoreId());
+        if (store == null) {
+            return requestHeadquartersId;
+        }
+        return store.getHeadquartersId();
     }
 
 }

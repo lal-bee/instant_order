@@ -20,4 +20,7 @@ public class EmployeeDTO implements Serializable {
     private Integer age;
     private Integer gender;
     private String pic;
+    private Long storeId;
+    private String role;
+    private String storeName;
 }

@@ -15,5 +15,7 @@ public class EmployeeLoginVO implements Serializable {
 
     private Integer id;
     private String account;
+    private Long storeId;
+    private String role;
     private String token;
 }

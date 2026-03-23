@@ -4,9 +4,9 @@
 <mapper namespace="fun.cyhgraph.mapper.DishMapper">
 
     <insert id="addDish" useGeneratedKeys="true" keyProperty="id">
-        insert into dish (name, pic, detail, price, category_id, create_user, update_user, create_time, update_time)
+        insert into dish (name, pic, detail, price, category_id, headquarters_id, create_user, update_user, create_time, update_time)
         VALUES
-        (#{name}, #{pic}, #{detail}, #{price}, #{categoryId},
+        (#{name}, #{pic}, #{detail}, #{price}, #{categoryId}, #{headquartersId},
          #{createUser}, #{updateUser}, #{createTime}, #{updateTime})
     </insert>
 
@@ -18,6 +18,7 @@
             <if test="detail != null">detail = #{detail},</if>
             <if test="price != null">price = #{price},</if>
             <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="headquartersId != null">headquarters_id = #{headquartersId},</if>
             <if test="createUser != null">create_user = #{createUser},</if>
             <if test="updateUser != null">update_user = #{updateUser},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
@@ -39,6 +40,9 @@
             <if test="name != null and name != ''">
                 and name like concat('%', #{name}, '%')
             </if>
+            <if test="headquartersId != null">
+                and headquarters_id = #{headquartersId}
+            </if>
             <if test="categoryId != null">
                 and category_id = #{categoryId}
             </if>
@@ -54,6 +58,9 @@
             <if test="name != null and name != ''">
                 and name like concat('%', #{name}, '%')
             </if>
+            <if test="headquartersId != null">
+                and headquarters_id = #{headquartersId}
+            </if>
             <if test="categoryId != null">
                 and category_id = #{categoryId}
             </if>
@@ -62,6 +69,20 @@
             </if>
         </where>
 
+    </select>
+
+    <select id="getListByStoreAndCategory" resultType="fun.cyhgraph.entity.Dish">
+        select d.*
+        from dish d
+                 inner join store_dish sd on d.id = sd.dish_id
+        where sd.store_id = #{storeId}
+          and sd.status = 1
+          and d.category_id = #{categoryId}
+          and d.status = 1
+    </select>
+
+    <select id="getByHeadquartersId" resultType="fun.cyhgraph.entity.Dish">
+        select * from dish where headquarters_id = #{headquartersId} order by id desc
     </select>
 
 </mapper>

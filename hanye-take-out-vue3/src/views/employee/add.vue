@@ -1,8 +1,10 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { addEmployeeAPI } from '@/api/employee'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useUserInfoStore } from '@/store'
+import { getStoreListAPI } from '@/api/store'
 
 // ------ 数据 ------
 const formLabelWidth = '60px'
@@ -15,7 +17,10 @@ const form = reactive({
   age: '',
   gender: '',
   pic: '',
+  role: 0,
+  storeId: undefined as number | undefined,
 })
+const storeList = ref<{ id: number; name: string }[]>([])
 const genders = [
   {
     value: 1,
@@ -28,6 +33,20 @@ const genders = [
 ]
 const inputRef1 = ref<HTMLInputElement | null>(null)
 const addRef = ref()
+const userInfoStore = useUserInfoStore()
+const roleLevel = (role: string | number | undefined | null) => {
+  if (role === 2 || role === '2' || role === 'CHAIRMAN') return 2
+  if (role === 1 || role === '1' || role === 'MANAGER') return 1
+  if (role === 0 || role === '0' || role === 'EMPLOYEE') return 0
+  return -1
+}
+const isChairman = computed(() => roleLevel(userInfoStore.userInfo?.role) === 2)
+const isManager = computed(() => roleLevel(userInfoStore.userInfo?.role) === 1)
+const roleOptions = [
+  { label: '董事长', value: 2 },
+  { label: '店长', value: 1 },
+  { label: '普通员工', value: 0 },
+]
 
 // 表单校验
 const checkAge = (rule: any, value: string, callback: (error?: Error) => void) => {
@@ -70,6 +89,9 @@ const rules = {
   ],
   gender: [
     { required: true, trigger: 'blur', message: '不能为空' },
+  ],
+  storeId: [
+    { required: true, trigger: 'blur', message: '请选择所属分店' },
   ],
 }
 
@@ -150,6 +172,14 @@ const cancel = () => {
 
 const init = async () => {
   console.log(route.query)
+  const { data: res } = await getStoreListAPI()
+  storeList.value = res.data || []
+  if (isManager.value) {
+    form.storeId = userInfoStore.userInfo?.storeId
+    form.role = 0
+  } else if (isChairman.value && storeList.value.length > 0) {
+    form.storeId = storeList.value[0].id
+  }
 }
 
 init()
@@ -179,6 +209,16 @@ init()
           <el-option v-for="item in genders" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
         <!-- <el-input v-model="form.gender" autocomplete="off" /> -->
+      </el-form-item>
+      <el-form-item label="角色" :label-width="formLabelWidth">
+        <el-select v-model="form.role" :disabled="isManager">
+          <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="分店" :label-width="formLabelWidth" prop="storeId">
+        <el-select v-model="form.storeId" placeholder="请选择所属分店" :disabled="isManager">
+          <el-option v-for="item in storeList" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
       </el-form-item>
       <el-form-item label="头像" :label-width="formLabelWidth" prop="pic">
         <img class="the_img" v-if="!form.pic" src="/src/assets/image/user_default.png" alt="" />

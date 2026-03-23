@@ -20,6 +20,16 @@ const router = createRouter({
           component: () => import('./views/statistics/index.vue')
         },
         {
+          path: 'headquarters',
+          name: 'headquarters',
+          component: () => import('./views/headquarters/index.vue')
+        },
+        {
+          path: 'store',
+          name: 'store',
+          component: () => import('./views/store/index.vue')
+        },
+        {
           path: 'order',
           name: 'order',
           component: () => import('./views/order/index.vue')
@@ -43,6 +53,11 @@ const router = createRouter({
           path: 'dish',
           name: 'dish',
           component: () => import('./views/dish/index.vue')
+        },
+        {
+          path: 'store-menu',
+          name: 'store_menu',
+          component: () => import('./views/store-menu/index.vue')
         },
         {
           path: 'dish/add',

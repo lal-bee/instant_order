@@ -24,9 +24,12 @@ public class CategoryController {
      * @return
      */
     @GetMapping("/list")
-    public Result<List<Category>> list(Integer type){
-        log.info("用户想要查询的分类（套餐/菜品分类？）：{}", type);
-        List<Category> categoryList = categoryService.getList(type);
+    public Result<List<Category>> list(Integer type, Long storeId){
+        log.info("用户想要查询的分类（套餐/菜品分类？）：{}，storeId:{}", type, storeId);
+        if (storeId == null) {
+            storeId = 1L;
+        }
+        List<Category> categoryList = categoryService.getListByStoreId(storeId, type);
         return Result.success(categoryList);
     }
 }

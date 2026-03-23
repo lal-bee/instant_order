@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { getEmployeeByIdAPI, updateEmployeeAPI } from '@/api/employee'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserInfoStore } from '@/store'
+import { getStoreListAPI } from '@/api/store'
 
 // ------ 数据 ------
 let userInfoStore = useUserInfoStore()
@@ -18,7 +19,16 @@ const form = reactive({
   age: '',
   gender: '',
   pic: '',
+  role: 0,
+  storeId: undefined as number | undefined,
 })
+const targetEmployee = ref<any>(null)
+const storeList = ref<{ id: number; name: string }[]>([])
+const roleOptions = [
+  { label: '董事长', value: 2 },
+  { label: '店长', value: 1 },
+  { label: '普通员工', value: 0 },
+]
 const genders = [
   {
     value: 1,
@@ -31,6 +41,19 @@ const genders = [
 ]
 const inputRef1 = ref<HTMLInputElement | null>(null)
 const updateRef = ref()
+const roleLevel = (role: string | number | undefined | null) => {
+  if (role === 2 || role === '2' || role === 'CHAIRMAN') return 2
+  if (role === 1 || role === '1' || role === 'MANAGER') return 1
+  if (role === 0 || role === '0' || role === 'EMPLOYEE') return 0
+  return -1
+}
+const isChairman = computed(() => roleLevel(userInfoStore.userInfo?.role) === 2)
+const isManager = computed(() => roleLevel(userInfoStore.userInfo?.role) === 1)
+const isEmployee = computed(() => roleLevel(userInfoStore.userInfo?.role) === 0)
+const isSelf = computed(() => userInfoStore.userInfo?.id === form.id)
+const canEditRoleStore = computed(() => isChairman.value)
+const canEditAccount = computed(() => isChairman.value || isSelf.value)
+const canEditBaseInfo = computed(() => isChairman.value || isManager.value || isSelf.value)
 
 // 表单校验
 const checkAge = (rule: any, value: string, callback: (error?: Error) => void) => {
@@ -123,6 +146,16 @@ const submit = async () => {
       console.log('submit')
       console.log(form)
       // 在这里执行表单提交操作，比如调用updateUser(form)方法等
+      if (isEmployee.value) {
+        form.role = targetEmployee.value?.role
+        form.storeId = targetEmployee.value?.storeId
+      }
+      if (isManager.value) {
+        form.storeId = targetEmployee.value?.storeId
+        if (form.role !== 0) {
+          form.role = 0
+        }
+      }
       const res = await updateEmployeeAPI(form)
       if (res.data.code !== 0) {
         // 响应拦截器已经用ElMessage打印了错误信息，这里直接return
@@ -173,6 +206,12 @@ const init = async () => {
     // 重新赋值，不改变引用的写法
     console.log(employee)
     Object.assign(form, employee.data.data)
+    targetEmployee.value = employee.data.data
+    const { data: storeRes } = await getStoreListAPI()
+    storeList.value = storeRes.data || []
+    if (isManager.value && form.role !== 0) {
+      form.role = 0
+    }
     console.log(form)
   } else {
     console.log('没有id')
@@ -188,27 +227,37 @@ init()
   <el-card>
     <el-form :model="form" :rules="rules" ref="updateRef">
       <el-form-item label="姓名" :label-width="formLabelWidth" prop="name">
-        <el-input v-model="form.name" autocomplete="off" />
+        <el-input v-model="form.name" autocomplete="off" :disabled="!canEditBaseInfo" />
       </el-form-item>
       <el-form-item label="账号" :label-width="formLabelWidth" prop="account">
-        <el-input v-model="form.account" autocomplete="off" />
+        <el-input v-model="form.account" autocomplete="off" :disabled="!canEditAccount" />
       </el-form-item>
       <el-form-item label="电话" :label-width="formLabelWidth" prop="phone">
-        <el-input v-model="form.phone" autocomplete="off" />
+        <el-input v-model="form.phone" autocomplete="off" :disabled="!canEditBaseInfo" />
       </el-form-item>
       <el-form-item label="年龄" :label-width="formLabelWidth" prop="age">
-        <el-input v-model="form.age" autocomplete="off" />
+        <el-input v-model="form.age" autocomplete="off" :disabled="!canEditBaseInfo" />
       </el-form-item>
       <el-form-item label="性别" :label-width="formLabelWidth" prop="gender">
-        <el-select clearable v-model="form.gender" placeholder="选择分类类型">
+        <el-select clearable v-model="form.gender" placeholder="选择分类类型" :disabled="!canEditBaseInfo">
           <el-option v-for="item in genders" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="角色" :label-width="formLabelWidth">
+        <el-select v-model="form.role" :disabled="!canEditRoleStore || isManager">
+          <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="分店" :label-width="formLabelWidth">
+        <el-select v-model="form.storeId" :disabled="!canEditRoleStore">
+          <el-option v-for="item in storeList" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="头像" :label-width="formLabelWidth" prop="pic">
         <img class="the_img" v-if="!form.pic" src="/src/assets/image/user_default.png" alt="" />
         <img class="the_img" v-else :src="form.pic" alt="" />
         <input type="file" accept="image/*" style="display: none" ref="inputRef1" @change="onFileChange1" />
-        <el-button type="primary" @click="chooseImg">
+        <el-button type="primary" @click="chooseImg" :disabled="!canEditBaseInfo">
           <el-icon style="font-size: 15px; margin-right: 10px;">
             <Plus />
           </el-icon>

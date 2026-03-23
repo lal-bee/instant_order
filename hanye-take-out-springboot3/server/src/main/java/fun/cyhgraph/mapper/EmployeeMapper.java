@@ -7,6 +7,8 @@ import fun.cyhgraph.entity.Employee;
 import fun.cyhgraph.enumeration.OperationType;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
+
 @Mapper
 public interface EmployeeMapper {
 
@@ -16,14 +18,16 @@ public interface EmployeeMapper {
     @Select("select * from employee where account = #{account}")
     Employee getByAccount(String account);
 
-    @Insert("insert into employee (name, account, password, phone, age, gender, pic, status, create_user, update_user, create_time, update_time) VALUES " +
-            "(#{name}, #{account}, #{password}, #{phone}, #{age}, #{gender}, #{pic}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})")
+    @Insert("insert into employee (name, account, password, phone, age, gender, pic, store_id, role, status, create_user, update_user, create_time, update_time) VALUES " +
+            "(#{name}, #{account}, #{password}, #{phone}, #{age}, #{gender}, #{pic}, #{storeId}, #{role}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
     @AutoFill(value = OperationType.REG)
         // 由于员工自己注册，但还没注册无法拿到线程id，所以createUser、updateUser只能先手动设置100表示自己操作，填充另外2个time字段就行
     void regEmployee(Employee employee);
 
-    @Insert("insert into employee (name, account, password, phone, age, gender, pic, status, create_user, update_user, create_time, update_time) VALUES " +
-            "(#{name}, #{account}, #{password}, #{phone}, #{age}, #{gender}, #{pic}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})")
+    @Insert("insert into employee (name, account, password, phone, age, gender, pic, store_id, role, status, create_user, update_user, create_time, update_time) VALUES " +
+            "(#{name}, #{account}, #{password}, #{phone}, #{age}, #{gender}, #{pic}, #{storeId}, #{role}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
     @AutoFill(value = OperationType.INSERT)
     void addEmployee(Employee employee);
 
@@ -44,4 +48,10 @@ public interface EmployeeMapper {
 
     @AutoFill(value = OperationType.UPDATE)
     void updatePwd(Employee employee);
+
+    @Select("select count(*) from employee where store_id = #{storeId} and role in ('1', 'MANAGER') and id != #{excludeId}")
+    Integer countManagerByStore(@Param("storeId") Long storeId, @Param("excludeId") Integer excludeId);
+
+    @Select("select * from employee where store_id = #{storeId}")
+    List<Employee> getByStoreId(Long storeId);
 }

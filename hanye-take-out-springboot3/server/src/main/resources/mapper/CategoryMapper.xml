@@ -6,6 +6,7 @@
     <update id="update">
         update category
         <set>
+            <if test="headquartersId != null">headquarters_id = #{headquartersId},</if>
             <if test="name != null">name = #{name},</if>
             <if test="type != null">type = #{type},</if>
             <if test="sort != null">sort = #{sort},</if>
@@ -23,6 +24,9 @@
             <if test="name != null and name != ''">
                 and name like concat('%', #{name}, '%')
             </if>
+            <if test="headquartersId != null">
+                and headquarters_id = #{headquartersId}
+            </if>
             <if test="type != null">
                 and type = #{type}
             </if>
@@ -36,6 +40,17 @@
             and type = #{type}
         </if>
         order by sort asc, create_time desc
+    </select>
+
+    <select id="getListByStoreId" resultType="fun.cyhgraph.entity.Category">
+        select c.*
+        from category c
+                 inner join dish d on d.category_id = c.id and d.status = 1
+                 inner join store_dish sd on sd.dish_id = d.id and sd.status = 1
+        where c.status = 1
+          and sd.store_id = #{storeId}
+        group by c.id
+        order by c.sort asc, c.create_time desc
     </select>
 
 </mapper>
