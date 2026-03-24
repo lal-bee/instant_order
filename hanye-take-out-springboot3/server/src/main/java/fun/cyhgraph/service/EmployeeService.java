@@ -29,4 +29,6 @@ public interface EmployeeService {
     void addEmployee(EmployeeDTO employeeDTO);
 
     void fixPwd(EmployeeFixPwdDTO employeeFixPwdDTO);
+
+    List<Employee> getManagerOptions();
 }

@@ -3,7 +3,7 @@
     <h2 class="homeTitle">
       套餐总览
       <div class="more">
-        <router-link to="setmeal">套餐管理</router-link>
+        <router-link to="/headquarters/setmeal">套餐管理</router-link>
         <el-icon>
           <ArrowRight />
         </el-icon>
@@ -29,8 +29,8 @@
           </span>
           <span class="num">{{ setMealData.discontinued }}</span>
         </li>
-        <li class="add">
-          <router-link to="setmeal/add">
+        <li v-if="canOperate" class="add">
+          <router-link to="/headquarters/setmeal/add">
             <el-icon>
               <CirclePlus />
             </el-icon>
@@ -43,6 +43,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useUserInfoStore } from '@/store'
+import { isChairman } from '@/utils/permission'
+
 interface SetMealData {
   sold: number;
   discontinued: number;
@@ -51,5 +55,8 @@ interface SetMealData {
 const props = defineProps<{
   setMealData: SetMealData;
 }>()
+
+const userInfoStore = useUserInfoStore()
+const canOperate = computed(() => isChairman(userInfoStore.userInfo?.role))
 
 </script>

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { getSetmealPageListAPI, updateSetmealStatusAPI, deleteSetmealsAPI } from '@/api/setmeal'
 import { getCategoryPageListAPI } from '@/api/category'
 import { ElMessage, ElMessageBox, ElTable } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { useUserInfoStore } from '@/store'
+import { isChairman } from '@/utils/permission'
 
 // ------ .d.ts 属性类型接口 ------
 // 接收到不在接口中定义的属性的数据，ts会报错，但是类型推断错误不会妨碍接收，控制台还是能打印的
@@ -49,6 +50,8 @@ const options = [
     label: '停售',
   }
 ]
+const userInfoStore = useUserInfoStore()
+const canOperate = computed(() => isChairman(userInfoStore.userInfo?.role))
 
 
 
@@ -101,11 +104,11 @@ const to_add_update = (row?: any) => {
   console.log('看有没有传过来，来判断要add还是update', row)
   if (row && row.id) {
     router.push({
-      path: '/setmeal/add',
+      path: '/headquarters/setmeal/add',
       query: { id: row.id }
     })
   } else {
-    router.push('/setmeal/add')
+    router.push('/headquarters/setmeal/add')
   }
 }
 
@@ -190,15 +193,15 @@ const deleteBatch = (row?: any) => {
         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
       <el-button size="large" class="btn" round type="success" @click="showPageList()">查询套餐</el-button>
-      <el-button size="large" class="btn" round type="danger" @click="deleteBatch()">批量删除</el-button>
-      <el-button size="large" class="btn" type="primary" @click="to_add_update()">
+      <el-button v-if="canOperate" size="large" class="btn" round type="danger" @click="deleteBatch()">批量删除</el-button>
+      <el-button v-if="canOperate" size="large" class="btn" type="primary" @click="to_add_update()">
         <el-icon style="font-size: 15px; margin-right: 10px;">
           <Plus />
         </el-icon>添加套餐
       </el-button>
     </div>
     <el-table ref="multiTableRef" :data="setmealList" stripe @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" />
+      <el-table-column v-if="canOperate" type="selection" width="55" />
       <!-- <el-table-column prop="id" label="id" /> -->
       <el-table-column prop="name" label="套餐名" align="center" />
       <el-table-column prop="pic" label="图片" align="center">
@@ -224,7 +227,7 @@ const deleteBatch = (row?: any) => {
         </template>
       </el-table-column>
       <el-table-column prop="updateTime" label="上次操作时间" width="180px" align="center" />
-      <el-table-column label="操作" width="200px" align="center">
+      <el-table-column v-if="canOperate" label="操作" width="200px" align="center">
         <template #default="scope">
           <el-button @click="to_add_update(scope.row)" type="primary">修改</el-button>
           <el-button @click="change_btn(scope.row)" plain :type="scope.row.status === 1 ? 'danger' : 'primary'">

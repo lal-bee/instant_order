@@ -22,6 +22,14 @@ public class HeadquartersController {
         return Result.success(headquartersService.getList());
     }
 
+    /**
+     * 分店新增/编辑下拉专用：返回可选总店（默认启用状态）
+     */
+    @GetMapping("/options")
+    public Result<List<Headquarters>> getOptions() {
+        return Result.success(headquartersService.getEnabledOptions());
+    }
+
     @GetMapping("/{id}")
     public Result<Headquarters> getById(@PathVariable Long id) {
         return Result.success(headquartersService.getById(id));

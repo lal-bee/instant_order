@@ -1,11 +1,13 @@
 <script setup lang="ts" name="layout">
-import { RouterView, useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useUserInfoStore } from '@/store'
 import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
 import { fixPwdAPI } from '@/api/employee'
 import { getStatusAPI, fixStatusAPI } from '@/api/shop'
 import { ElNotification } from 'element-plus'
+import { layoutChildrenRoutes } from '@/router'
+import { filterRoutesByRole, normalizeRole } from '@/utils/permission'
 
 // ------ data ------
 const dialogFormVisible = ref(false)
@@ -13,66 +15,46 @@ const dialogStatusVisible = ref(false)
 const formLabelWidth = '80px'
 const isCollapse = ref(false)
 const userInfoStore = useUserInfoStore()
-
-const rawMenuList = [
-  {
-    title: '控制台',
-    path: '/dashboard',
-    icon: 'pieChart',
-  },
-  {
-    title: '数据统计',
-    path: '/statistics',
-    icon: 'memo',
-  },
-  {
-    title: '订单管理',
-    path: '/order',
-    icon: 'collection',
-  },
-  {
-    title: '套餐管理',
-    path: '/setmeal',
-    icon: 'user',
-  },
-  {
-    title: '标准菜品管理',
-    path: '/dish',
-    icon: 'dish',
-  },
-  {
-    title: '总店管理',
-    path: '/headquarters',
-    icon: 'officeBuilding',
-  },
-  {
-    title: '分店管理',
-    path: '/store',
-    icon: 'shop',
-  },
-  {
-    title: '门店菜单配置',
-    path: '/store-menu',
-    icon: 'tickets',
-  },
-  {
-    title: '员工管理',
-    path: '/employee',
-    icon: 'setting',
-  },
-]
-const roleLevel = (role: string | number | undefined | null) => {
-  if (role === 2 || role === '2' || role === 'CHAIRMAN') return 2
-  if (role === 1 || role === '1' || role === 'MANAGER') return 1
-  if (role === 0 || role === '0' || role === 'EMPLOYEE') return 0
-  return -1
+type MenuItem = {
+  title: string
+  path: string
+  icon?: string
+  children?: MenuItem[]
 }
+
+const resolvePath = (parentPath: string, childPath: string) => {
+  if (childPath.startsWith('/')) return childPath
+  if (!parentPath || parentPath === '/') return `/${childPath}`.replace(/\/+/g, '/')
+  return `${parentPath}/${childPath}`.replace(/\/+/g, '/')
+}
+
+const buildMenuTree = (routes: RouteRecordRaw[], parentPath = ''): MenuItem[] => {
+  return routes.reduce<MenuItem[]>((acc, route) => {
+    const meta = (route.meta || {}) as { title?: string; icon?: string; hidden?: boolean }
+    if (meta.hidden || !route.path) return acc
+
+    const fullPath = resolvePath(parentPath, route.path)
+    const children = route.children?.length ? buildMenuTree(route.children, fullPath) : []
+
+    if (!meta.title) {
+      if (children.length) acc.push(...children)
+      return acc
+    }
+
+    acc.push({
+      title: meta.title,
+      path: fullPath,
+      icon: meta.icon,
+      children: children.length ? children : undefined,
+    })
+    return acc
+  }, [])
+}
+
 const menuList = computed(() => {
-  const role = userInfoStore.userInfo?.role
-  if (roleLevel(role) === 2) {
-    return rawMenuList
-  }
-  return rawMenuList.filter(item => !['/headquarters', '/store', '/store-menu'].includes(item.path))
+  const normalizedRole = normalizeRole(userInfoStore.userInfo?.role)
+  const roleRoutes = filterRoutesByRole(layoutChildrenRoutes, normalizedRole)
+  return buildMenuTree(roleRoutes)
 })
 
 const form = reactive({
@@ -116,12 +98,11 @@ const rules = { // 表单的规则检验对象
 
 // ------ method ------
 const router = useRouter()
-const route = useRoute();
-// 根据当前路由的路径返回要激活的菜单项
-const getActiveAside = () => {
-  console.log('当前路由的路径--------------', route.path)
-  return route.path;
-};
+const route = useRoute()
+const activeMenuPath = computed(() => {
+  const routeMeta = route.meta as { activeMenu?: string }
+  return routeMeta.activeMenu || route.path
+})
 
 // 初始化时获取营业状态
 const init = async () => {
@@ -372,13 +353,27 @@ onBeforeUnmount(() => {
       </el-header>
       <el-container class="box1">
         <!-- 左侧导航菜单区域 -->
-        <el-menu :width="isCollapse ? '640px' : '200px'" :default-active="getActiveAside()" :collapse="isCollapse"
+        <el-menu :width="isCollapse ? '640px' : '200px'" :default-active="activeMenuPath" :collapse="isCollapse"
           background-color="#22aaee" text-color="#fff" unique-opened router>
           <!-- 加了router模式，就会在激活导航时以 :index 作为path进行路径跳转（nb!不用自己写路由了!） -->
           <!-- 根据不同情况选择menu-item/submenu进行遍历，所以外层套template遍历，里面组件做判断看是否该次遍历到自己 -->
           <template v-for="item in menuList" :key="item.path">
-            <el-menu-item :index="item.path">
-              <el-icon>
+            <el-sub-menu v-if="item.children && item.children.length > 0" :index="item.path">
+              <template #title>
+                <el-icon v-if="item.icon">
+                  <component :is="item.icon" />
+                </el-icon>
+                <span>{{ item.title }}</span>
+              </template>
+              <el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">
+                <el-icon v-if="child.icon">
+                  <component :is="child.icon" />
+                </el-icon>
+                <span>{{ child.title }}</span>
+              </el-menu-item>
+            </el-sub-menu>
+            <el-menu-item v-else :index="item.path">
+              <el-icon v-if="item.icon">
                 <component :is="item.icon" />
               </el-icon>
               <span>{{ item.title }}</span>

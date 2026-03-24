@@ -25,6 +25,9 @@ public interface HeadquartersMapper {
     @Select("select * from headquarters order by id asc")
     List<Headquarters> getList();
 
+    @Select("select * from headquarters where status = 1 order by id asc")
+    List<Headquarters> getEnabledList();
+
     @AutoFill(OperationType.UPDATE)
     void update(Headquarters headquarters);
 

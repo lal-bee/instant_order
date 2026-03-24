@@ -1,9 +1,10 @@
 <script setup lang="ts">
-
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { getCategoryPageListAPI, updateCategoryStatusAPI, deleteCategoryAPI } from '@/api/category'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { useUserInfoStore } from '@/store'
+import { isChairman } from '@/utils/permission'
 
 // ------ .d.ts 属性类型接口 ------
 interface category {
@@ -37,6 +38,8 @@ const options = [
     label: '套餐分类',
   }
 ]
+const userInfoStore = useUserInfoStore()
+const canOperate = computed(() => isChairman(userInfoStore.userInfo?.role))
 
 
 // ------ 方法 ------
@@ -74,7 +77,7 @@ const update_btn = (row: any) => {
   console.log('要修改的行数据')
   console.log(row)
   router.push({
-    name: 'category_update',
+    name: 'headquarters_category_update',
     query: {
       id: row.id
     }
@@ -135,7 +138,7 @@ const delete_btn = (row: any) => {
         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
       <el-button size="large" class="btn" round type="success" @click="init()">查询分类</el-button>
-      <el-button size="large" class="btn" type="primary" @click="router.push('/category/add')">
+      <el-button v-if="canOperate" size="large" class="btn" type="primary" @click="router.push('/headquarters/category/add')">
         <el-icon style="font-size: 15px; margin-right: 10px;">
           <Plus />
         </el-icon>添加分类
@@ -158,7 +161,7 @@ const delete_btn = (row: any) => {
         </template>
       </el-table-column>
       <el-table-column prop="updateTime" label="上次操作时间" width="250px" style="font-size: 10px;" align="center" />
-      <el-table-column label="操作" width="250px" align="center">
+      <el-table-column v-if="canOperate" label="操作" width="250px" align="center">
         <!-- scope 的父组件是 el-table -->
         <template #default="scope">
           <!-- <el-button class="play_btn" @click="playSong(scope.row.audio)">Play</el-button> -->

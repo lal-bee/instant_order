@@ -5,6 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserInfoStore } from '@/store'
 import { getStoreListAPI } from '@/api/store'
+import { isChairman as isChairmanRole, isStoreManager, isEmployee as isEmployeeRole } from '@/utils/permission'
 
 // ------ 数据 ------
 let userInfoStore = useUserInfoStore()
@@ -41,15 +42,9 @@ const genders = [
 ]
 const inputRef1 = ref<HTMLInputElement | null>(null)
 const updateRef = ref()
-const roleLevel = (role: string | number | undefined | null) => {
-  if (role === 2 || role === '2' || role === 'CHAIRMAN') return 2
-  if (role === 1 || role === '1' || role === 'MANAGER') return 1
-  if (role === 0 || role === '0' || role === 'EMPLOYEE') return 0
-  return -1
-}
-const isChairman = computed(() => roleLevel(userInfoStore.userInfo?.role) === 2)
-const isManager = computed(() => roleLevel(userInfoStore.userInfo?.role) === 1)
-const isEmployee = computed(() => roleLevel(userInfoStore.userInfo?.role) === 0)
+const isChairman = computed(() => isChairmanRole(userInfoStore.userInfo?.role))
+const isManager = computed(() => isStoreManager(userInfoStore.userInfo?.role))
+const isEmployee = computed(() => isEmployeeRole(userInfoStore.userInfo?.role))
 const isSelf = computed(() => userInfoStore.userInfo?.id === form.id)
 const canEditRoleStore = computed(() => isChairman.value)
 const canEditAccount = computed(() => isChairman.value || isSelf.value)

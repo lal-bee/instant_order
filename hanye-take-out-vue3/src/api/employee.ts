@@ -71,6 +71,16 @@ export const getEmployeePageListAPI = (params: any) => {
 }
 
 /**
+ * 获取店长下拉选项（role=1）
+ */
+export const getManagerOptionsAPI = () => {
+  return request({
+    url: '/employee/managers',
+    method: 'get',
+  })
+}
+
+/**
  * 获取当前登录员工详情
  */
 export const getCurrentEmployeeAPI = (id: number) => {

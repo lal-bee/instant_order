@@ -63,7 +63,7 @@ const submit = async () => {
         type: 'success',
       })
       router.push({
-        path: '/category',
+        path: '/headquarters/category',
       })
     } else {
       console.log('form not valid!');
@@ -76,7 +76,7 @@ const submit = async () => {
 // 取消修改
 const cancel = () => {
   router.push({
-    path: '/category',
+    path: '/headquarters/category',
   })
 }
 

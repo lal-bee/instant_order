@@ -206,7 +206,7 @@ const submit = async (keep: any) => {
         getLeftDishFlavors()
       } else {
         router.push({
-          path: '/dish',
+          path: '/headquarters/dish',
         })
       }
     }
@@ -223,7 +223,7 @@ const submit = async (keep: any) => {
         type: 'success',
       })
       router.push({
-        path: '/dish',
+        path: '/headquarters/dish',
       })
     }
 
@@ -235,7 +235,7 @@ const submit = async (keep: any) => {
 // 取消修改
 const cancel = () => {
   router.push({
-    path: '/dish',
+    path: '/headquarters/dish',
   })
 }
 

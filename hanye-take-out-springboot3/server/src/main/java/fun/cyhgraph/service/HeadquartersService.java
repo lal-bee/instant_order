@@ -15,5 +15,7 @@ public interface HeadquartersService {
 
     List<Headquarters> getList();
 
+    List<Headquarters> getEnabledOptions();
+
     void onOff(Long id);
 }

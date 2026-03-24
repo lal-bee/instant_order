@@ -54,4 +54,13 @@ public interface EmployeeMapper {
 
     @Select("select * from employee where store_id = #{storeId}")
     List<Employee> getByStoreId(Long storeId);
+
+    @Select("select e.id, e.name, e.account, e.store_id, s.name as store_name " +
+            "from employee e left join store s on e.store_id = s.id " +
+            "where (case " +
+            "        when CAST(e.role AS CHAR) in ('MANAGER', 'STORE_MANAGER') then '1' " +
+            "        else CAST(e.role AS CHAR) " +
+            "      end) = '1' " +
+            "order by e.id asc")
+    List<Employee> getManagerOptions();
 }

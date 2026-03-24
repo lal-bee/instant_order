@@ -5,6 +5,8 @@ import { ElMessage, ElMessageBox, ElTable } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useUserInfoStore } from '@/store'
 import { getStoreListAPI } from '@/api/store'
+import { RoleEnum, ROLE_LABEL_MAP, ROLE_ORDER_MAP } from '@/constants/permission'
+import { normalizeRole, isChairman as isChairmanRole, isStoreManager, isEmployee as isEmployeeRole } from '@/utils/permission'
 
 // ------ .d.ts 属性类型接口 ------
 interface employee {
@@ -16,7 +18,7 @@ interface employee {
   gender: number
   pic: string
   status: number
-  role: 0 | 1 | 2 | 'EMPLOYEE' | 'MANAGER' | 'CHAIRMAN'
+  role: string | number
   storeId: number
   storeName: string
   updateTime: string
@@ -40,38 +42,9 @@ const pageData = reactive({
   total: 0
 })
 
-const roleLevel = (role: string | number | undefined | null) => {
-  if (role === 2 || role === '2' || role === 'CHAIRMAN') return 2
-  if (role === 1 || role === '1' || role === 'MANAGER') return 1
-  if (role === 0 || role === '0' || role === 'EMPLOYEE') return 0
-  return -1
-}
-const isChairman = computed(() => roleLevel(userInfoStore.userInfo?.role) === 2)
-const isManager = computed(() => roleLevel(userInfoStore.userInfo?.role) === 1)
-const isEmployee = computed(() => roleLevel(userInfoStore.userInfo?.role) === 0)
-
-const roleMap: Record<string | number, string> = {
-  0: '普通员工',
-  '0': '普通员工',
-  1: '店长',
-  '1': '店长',
-  2: '董事长',
-  '2': '董事长',
-  CHAIRMAN: '董事长',
-  MANAGER: '店长',
-  EMPLOYEE: '普通员工',
-}
-const roleOrderMap: Record<string | number, number> = {
-  2: 3,
-  '2': 3,
-  1: 2,
-  '1': 2,
-  0: 1,
-  '0': 1,
-  CHAIRMAN: 3,
-  MANAGER: 2,
-  EMPLOYEE: 1,
-}
+const isChairman = computed(() => isChairmanRole(userInfoStore.userInfo?.role))
+const isManager = computed(() => isStoreManager(userInfoStore.userInfo?.role))
+const isEmployee = computed(() => isEmployeeRole(userInfoStore.userInfo?.role))
 const genderMap: Record<number, string> = {
   1: '男',
   0: '女',
@@ -102,7 +75,7 @@ const init = async () => {
   console.log('员工列表')
   console.log(res.data)
   employeeList.value = (res.data.records || []).sort((a: employee, b: employee) => {
-    const roleDiff = (roleOrderMap[b.role] || 0) - (roleOrderMap[a.role] || 0)
+    const roleDiff = (ROLE_ORDER_MAP[normalizeRole(b.role)] || 0) - (ROLE_ORDER_MAP[normalizeRole(a.role)] || 0)
     if (roleDiff !== 0) return roleDiff
     return b.id - a.id
   })
@@ -141,23 +114,28 @@ const update_btn = (row: any) => {
   })
 }
 
+const isSelfRow = (row: employee) => row.id === userInfoStore.userInfo?.id
+
 const showEditBtn = (row: employee) => {
   if (isChairman.value) return true
-  if (isManager.value) return row.storeId === userInfoStore.userInfo?.storeId && roleLevel(row.role) === 0
+  if (isManager.value) {
+    if (isSelfRow(row)) return true
+    return row.storeId === userInfoStore.userInfo?.storeId && normalizeRole(row.role) === RoleEnum.EMPLOYEE
+  }
   if (isEmployee.value) return row.id === userInfoStore.userInfo?.id
   return false
 }
 const showDeleteBtn = (row: employee) => {
   if (isChairman.value) return true
-  if (isManager.value) return row.storeId === userInfoStore.userInfo?.storeId && roleLevel(row.role) === 0
+  if (isManager.value) return row.storeId === userInfoStore.userInfo?.storeId && normalizeRole(row.role) === RoleEnum.EMPLOYEE
   return false
 }
 const showStatusBtn = (row: employee) => {
   if (isChairman.value) return true
-  if (isManager.value) return row.storeId === userInfoStore.userInfo?.storeId && roleLevel(row.role) === 0
+  if (isManager.value) return row.storeId === userInfoStore.userInfo?.storeId && normalizeRole(row.role) === RoleEnum.EMPLOYEE
   return false
 }
-const roleText = (role: string | number) => roleMap[role] || String(role)
+const roleText = (role: string | number) => ROLE_LABEL_MAP[normalizeRole(role)] || String(role)
 const genderText = (gender: number) => genderMap[gender] || '-'
 
 // 修改员工状态
@@ -277,7 +255,7 @@ const deleteBatch = () => {
         <!-- scope 的父组件是 el-table -->
         <template #default="scope">
           <el-button v-if="showEditBtn(scope.row)" class="op-btn" @click="update_btn(scope.row)" type="primary">
-            {{ isEmployee ? '修改个人信息' : '修改' }}
+            {{ isSelfRow(scope.row) ? '修改个人信息' : '修改' }}
           </el-button>
           <el-button v-if="showStatusBtn(scope.row)" class="op-btn" @click="change_btn(scope.row)" plain
             :type="scope.row.status === 1 ? 'danger' : 'primary'">

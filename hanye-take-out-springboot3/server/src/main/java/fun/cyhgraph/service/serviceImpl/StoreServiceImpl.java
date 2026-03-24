@@ -23,6 +23,7 @@ public class StoreServiceImpl implements StoreService {
     @Override
     public void add(Store store) {
         ensureChairman();
+        validateManagerEmployee(store.getManagerEmployeeId());
         if (store.getStatus() == null) {
             store.setStatus(1);
         }
@@ -32,6 +33,7 @@ public class StoreServiceImpl implements StoreService {
     @Override
     public void update(Store store) {
         ensureChairman();
+        validateManagerEmployee(store.getManagerEmployeeId());
         storeMapper.update(store);
     }
 
@@ -87,6 +89,23 @@ public class StoreServiceImpl implements StoreService {
 
     private boolean isChairman(String role) {
         return "2".equals(role) || "CHAIRMAN".equals(role);
+    }
+
+    private boolean isManager(String role) {
+        return "1".equals(role) || "MANAGER".equals(role) || "STORE_MANAGER".equals(role);
+    }
+
+    private void validateManagerEmployee(Integer managerEmployeeId) {
+        if (managerEmployeeId == null) {
+            return;
+        }
+        Employee manager = employeeMapper.getById(managerEmployeeId);
+        if (manager == null) {
+            throw new BaseException("关联店长不存在");
+        }
+        if (!isManager(manager.getRole())) {
+            throw new BaseException("所选员工不是店长角色");
+        }
     }
 
     private Employee getCurrentEmployee() {

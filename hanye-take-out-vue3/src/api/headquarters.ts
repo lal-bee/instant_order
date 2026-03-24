@@ -7,6 +7,14 @@ export const getHeadquartersListAPI = () => {
   })
 }
 
+// 分店新增/编辑专用：仅拉取可用总店选项
+export const getHeadquartersOptionsAPI = () => {
+  return request({
+    url: '/headquarters/options',
+    method: 'get',
+  })
+}
+
 export const addHeadquartersAPI = (params: any) => {
   return request({
     url: '/headquarters',

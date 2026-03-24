@@ -3,7 +3,7 @@
     <h2 class="homeTitle">
       菜品总览
       <div class="more">
-        <router-link to="dish">菜品管理</router-link>
+        <router-link to="/headquarters/dish">菜品管理</router-link>
         <el-icon>
           <ArrowRight />
         </el-icon>
@@ -29,8 +29,8 @@
           </span>
           <span class="num">{{ dishesData.discontinued }}</span>
         </li>
-        <li class="add">
-          <router-link to="/dish/add">
+        <li v-if="canOperate" class="add">
+          <router-link to="/headquarters/dish/add">
             <el-icon>
               <CirclePlus />
             </el-icon>
@@ -43,6 +43,9 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
+import { useUserInfoStore } from '@/store'
+import { isChairman } from '@/utils/permission'
 
 // Define props
 const props = defineProps<{
@@ -51,6 +54,9 @@ const props = defineProps<{
     discontinued: number
   }
 }>()
+
+const userInfoStore = useUserInfoStore()
+const canOperate = computed(() => isChairman(userInfoStore.userInfo?.role))
 </script>
 
 <style scoped></style>

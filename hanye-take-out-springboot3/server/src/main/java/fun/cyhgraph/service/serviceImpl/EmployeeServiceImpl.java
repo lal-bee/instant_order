@@ -262,6 +262,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeMapper.updatePwd(employee);
     }
 
+    @Override
+    public List<Employee> getManagerOptions() {
+        Employee current = getCurrentEmployee();
+        if (isChairman(current.getRole()) || isManager(current.getRole())) {
+            return employeeMapper.getManagerOptions();
+        }
+        throw new BaseException("无权限获取店长列表");
+    }
+
     private Employee getCurrentEmployee() {
         Integer currentId = BaseContext.getCurrentId();
         if (currentId == null) {

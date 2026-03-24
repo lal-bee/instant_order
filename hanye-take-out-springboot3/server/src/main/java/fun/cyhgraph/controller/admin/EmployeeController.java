@@ -159,4 +159,12 @@ public class EmployeeController {
         employeeService.deleteBatch(ids);
         return Result.success();
     }
+
+    /**
+     * 获取分店关联店长下拉选项（role=1）
+     */
+    @GetMapping("/managers")
+    public Result<List<Employee>> getManagerOptions() {
+        return Result.success(employeeService.getManagerOptions());
+    }
 }
