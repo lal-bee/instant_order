@@ -71,7 +71,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setAge(0);
         employee.setGender(1);
         if (employeeLoginDTO.getStoreId() == null) {
-            throw new BaseException("注册员工必须绑定所属分店");
+            throw new BaseException("注册普通员工必须绑定所属分店");
         }
         employee.setStoreId(employeeLoginDTO.getStoreId());
         employee.setRole("0");
@@ -134,8 +134,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (employeeDTO.getRole() != null && !employeeDTO.getRole().isEmpty()) {
             employeeDTO.setRole(normalizeRole(employeeDTO.getRole()));
         }
+        ensureEmployeeStoreRule(employeeDTO.getRole(), employeeDTO.getStoreId(), "修改员工");
         checkUpdatePermission(current, target, employeeDTO);
-        checkManagerUnique(employeeDTO.getStoreId(), employeeDTO.getRole(), employeeDTO.getId());
 
         // 缺少时间等字段，需要手动加入，否则Mapper里的autofill注解会为EmployeeDTO去setUpdateTime，然而根本没这个方法导致报错！
         Employee employee = new Employee();
@@ -206,14 +206,12 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     public void addEmployee(EmployeeDTO employeeDTO) {
         Employee current = getCurrentEmployee();
-        if (employeeDTO.getStoreId() == null) {
-            throw new BaseException("新增员工必须指定所属分店");
-        }
         if (employeeDTO.getRole() == null || employeeDTO.getRole().isEmpty()) {
             employeeDTO.setRole("0");
         } else {
             employeeDTO.setRole(normalizeRole(employeeDTO.getRole()));
         }
+        ensureEmployeeStoreRule(employeeDTO.getRole(), employeeDTO.getStoreId(), "新增员工");
         if (isManager(current.getRole()) && !current.getStoreId().equals(employeeDTO.getStoreId())) {
             throw new BaseException("店长只能新增本店员工");
         }
@@ -223,7 +221,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (isEmployee(current.getRole())) {
             throw new BaseException("普通员工无权限新增员工");
         }
-        checkManagerUnique(employeeDTO.getStoreId(), employeeDTO.getRole(), null);
 
         // 先对用户的密码进行MD5加密，再存到数据库中
         String password = employeeDTO.getPassword();
@@ -263,10 +260,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<Employee> getManagerOptions() {
+    public List<Employee> getManagerOptions(Boolean enabledOnly) {
         Employee current = getCurrentEmployee();
         if (isChairman(current.getRole()) || isManager(current.getRole())) {
-            return employeeMapper.getManagerOptions();
+            return employeeMapper.getManagerOptions(enabledOnly);
         }
         throw new BaseException("无权限获取店长列表");
     }
@@ -281,16 +278,6 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new BaseException("当前登录员工不存在");
         }
         return employee;
-    }
-
-    private void checkManagerUnique(Long storeId, String role, Integer excludeId) {
-        if (storeId == null || !isManager(role)) {
-            return;
-        }
-        Integer managerCount = employeeMapper.countManagerByStore(storeId, excludeId == null ? 0 : excludeId);
-        if (managerCount != null && managerCount > 0) {
-            throw new BaseException("同一分店只能存在一个店长");
-        }
     }
 
     private void checkUpdatePermission(Employee current, Employee target, EmployeeDTO employeeDTO) {
@@ -341,7 +328,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         return switch (role) {
             case "2", "CHAIRMAN" -> 2;
-            case "1", "MANAGER" -> 1;
+            case "1", "MANAGER", "STORE_MANAGER" -> 1;
             case "0", "EMPLOYEE" -> 0;
             default -> -1;
         };
@@ -353,5 +340,17 @@ public class EmployeeServiceImpl implements EmployeeService {
             return role;
         }
         return String.valueOf(level);
+    }
+
+    private void ensureEmployeeStoreRule(String role, Long storeId, String actionLabel) {
+        if (isChairman(role)) {
+            return;
+        }
+        if (isManager(role)) {
+            return;
+        }
+        if (isEmployee(role) && storeId == null) {
+            throw new BaseException(actionLabel + "时，普通员工必须绑定分店");
+        }
     }
 }

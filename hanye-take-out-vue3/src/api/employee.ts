@@ -73,10 +73,11 @@ export const getEmployeePageListAPI = (params: any) => {
 /**
  * 获取店长下拉选项（role=1）
  */
-export const getManagerOptionsAPI = () => {
+export const getManagerOptionsAPI = (enabledOnly = true) => {
   return request({
     url: '/employee/managers',
     method: 'get',
+    params: { enabledOnly },
   })
 }
 

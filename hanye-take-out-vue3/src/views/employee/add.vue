@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { addEmployeeAPI } from '@/api/employee'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -60,6 +60,14 @@ const checkAge = (rule: any, value: string, callback: (error?: Error) => void) =
     }
   }
 }
+const validateStoreId = (rule: any, value: number | undefined, callback: (error?: Error) => void) => {
+  // 仅普通员工必须绑定分店：2=董事长 1=店长 0=员工
+  if (form.role === 0 && (value === undefined || value === null)) {
+    callback(new Error('普通员工必须选择所属分店'))
+    return
+  }
+  callback()
+}
 const rules = {
   name: [
     { required: true, trigger: 'blur', message: '不能为空' },
@@ -86,9 +94,21 @@ const rules = {
     { required: true, trigger: 'blur', message: '不能为空' },
   ],
   storeId: [
-    { required: true, trigger: 'blur', message: '请选择所属分店' },
+    { validator: validateStoreId, trigger: 'change' },
   ],
 }
+
+watch(
+  () => form.role,
+  (role) => {
+    // 董事长和店长允许不绑定分店，自动清空可打破“先建店再建店长”的死循环
+    if (role === 2 || role === 1) {
+      form.storeId = undefined
+    } else if (role === 0 && storeList.value.length > 0 && !form.storeId) {
+      form.storeId = storeList.value[0].id
+    }
+  },
+)
 
 
 // ------ 方法 ------
@@ -211,7 +231,12 @@ init()
         </el-select>
       </el-form-item>
       <el-form-item label="分店" :label-width="formLabelWidth" prop="storeId">
-        <el-select v-model="form.storeId" placeholder="请选择所属分店" :disabled="isManager">
+        <el-select
+          v-model="form.storeId"
+          placeholder="请选择所属分店（店长可不选）"
+          :disabled="isManager"
+          clearable
+        >
           <el-option v-for="item in storeList" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
       </el-form-item>

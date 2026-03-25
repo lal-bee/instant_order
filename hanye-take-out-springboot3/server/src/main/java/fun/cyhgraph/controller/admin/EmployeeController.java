@@ -164,7 +164,7 @@ public class EmployeeController {
      * 获取分店关联店长下拉选项（role=1）
      */
     @GetMapping("/managers")
-    public Result<List<Employee>> getManagerOptions() {
-        return Result.success(employeeService.getManagerOptions());
+    public Result<List<Employee>> getManagerOptions(@RequestParam(defaultValue = "true") Boolean enabledOnly) {
+        return Result.success(employeeService.getManagerOptions(enabledOnly));
     }
 }

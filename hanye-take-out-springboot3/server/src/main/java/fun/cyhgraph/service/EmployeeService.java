@@ -30,5 +30,5 @@ public interface EmployeeService {
 
     void fixPwd(EmployeeFixPwdDTO employeeFixPwdDTO);
 
-    List<Employee> getManagerOptions();
+    List<Employee> getManagerOptions(Boolean enabledOnly);
 }
