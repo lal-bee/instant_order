@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fun.cyhgraph.mapper.EmployeeMapper">
+
+    <update id="update">
+        update employee
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="account != null">account = #{account},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="pic != null">pic = #{pic},</if>
+            <if test="storeId != null">store_id = #{storeId},</if>
+            <if test="role != null and role != ''">role = #{role},</if>
+            <if test="createUser != null">create_user = #{createUser},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updatePwd">
+        update employee
+        <set>
+            <if test="password != null">password = #{password},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="fun.cyhgraph.entity.Employee">
+        select e.*, s.name as store_name
+        from employee e
+        left join store s on e.store_id = s.id
+        <where>
+            <if test="name != null and name != ''">
+                and e.name like concat('%', #{name}, '%')
+            </if>
+            <if test="storeId != null">
+                and e.store_id = #{storeId}
+            </if>
+            <if test="role != null and role != ''">
+                and e.role = #{role}
+            </if>
+        </where>
+        order by FIELD(e.role, '2', 'CHAIRMAN', '1', 'MANAGER', 'STORE_MANAGER', '0', 'EMPLOYEE') asc, e.id desc
+    </select>
+
+    <select id="getManagerOptions" resultType="fun.cyhgraph.entity.Employee">
+        select e.id, e.name, e.account, e.store_id, s.name as store_name, e.status, e.role
+        from employee e
+        left join store s on e.store_id = s.id
+        where e.role = '1'
+        <if test="enabledOnly != null and enabledOnly">
+            and e.status = 1
+        </if>
+        order by e.id asc
+    </select>
+
+</mapper>
