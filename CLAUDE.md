@@ -1,118 +1,132 @@
 # CLAUDE.md
 
-## Project Overview
-This repository is an online ordering / takeout system with three main parts:
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-1. `hanye-take-out-springboot3` — Java backend
-2. `hanye-take-out-vue3` — Vue 3 admin web frontend
-3. `instant_order_user` — user-side client / mini-program related code
+## 项目定位
 
-The repo README states the stack is:
-- Frontend: Vue 3, TypeScript, Pinia, Element Plus, ECharts
-- Backend: Spring Boot 3, MyBatis, Redis
-- Recommended environment: Node 20.x, JDK 17+, Maven 3.9.x :contentReference[oaicite:0]{index=0}
+在线点餐 / 外卖系统，三端拆分：
 
----
+- `admin_backend`：管理端后端（Spring Boot 3 多模块 Maven 项目）
+- `admin_frontend`：管理端前端（Vue 3 + TypeScript + Vite）
+- `client_frontend`：用户端前端（Vue CLI，面向小程序/H5）
 
-## Tech Stack
-### Backend
-- Java 17
-- Spring Boot 3.2.x
-- MyBatis
-- MySQL
-- Redis
-- Lombok
-- Fastjson
-- Apache HttpClient
-
-The backend appears to be a Maven multi-module project with modules:
-- `common`
-- `pojo`
-- `server` :contentReference[oaicite:1]{index=1}
-
-### Frontend
-- Vue 3
-- TypeScript
-- Vite
-- Vue Router
-- Pinia
-- Element Plus
-- Axios
-- ECharts :contentReference[oaicite:2]{index=2}
+**修改代码前，必须先确认改的是哪一端。**
 
 ---
 
-## Repository Structure
-- `hanye-take-out-springboot3/` — backend source
-- `hanye-take-out-vue3/` — admin frontend
-- `instant_order_user/` — user-side code
-- `docs/` — project docs
-- `hanye_take_out.sql` — main database SQL
-- `db-fix-manager-store-chain.sql` — database patch / fix script
-- `README.md` — setup notes and project intro :contentReference[oaicite:3]{index=3}
+## 技术栈
+
+| 层次 | 技术 |
+|------|------|
+| 后端 | Java 17、Spring Boot 3.2.5、MyBatis、Redis、WebSocket |
+| 管理端前端 | Vue 3、TypeScript、Vite、Pinia、Element Plus、ECharts、Less |
+| 用户端前端 | Vue 3、Vue CLI、Pinia、Axios |
+| 接口管理 | Apifox |
+
+**环境要求：** JDK 17+、Node.js 20+、Maven 3.9+
 
 ---
 
-## How to Work in This Repo
+## 常用命令
 
-### General Rules
-- Prefer minimal, targeted changes over broad refactors.
-- Before changing code, first understand which subproject is affected:
-    - backend API / business logic → `hanye-take-out-springboot3`
-    - admin UI / pages / permissions → `hanye-take-out-vue3`
-    - user-side ordering flow / mini-program issues → `instant_order_user`
-- Keep existing naming style and directory conventions.
-- Do not change database schema casually; if schema changes are needed, also provide SQL migration scripts.
-- When touching permissions, store isolation, or role logic, verify both backend authorization and frontend visibility.
+### 后端 (`admin_backend/`)
 
-### Backend Rules
-- Follow Spring Boot layered structure:
-    - controller
-    - service
-    - mapper
-    - entity / dto / vo
-- Keep business logic in service layer, not controller.
-- For DB changes:
-    - update mapper XML / mapper interface consistently
-    - check DTO / VO / entity impacts
-    - note whether existing SQL files need patch scripts
-- If adding an API:
-    1. define request/response objects clearly
-    2. implement service logic
-    3. add mapper SQL if needed
-    4. keep return format consistent with current project style
-- Preserve compatibility with existing admin and user endpoints unless explicitly asked to break them.
-
-### Frontend Rules
-- Use the existing Vue 3 + TS + Pinia + Element Plus stack.
-- Reuse existing API modules, router conventions, and store patterns before creating new ones.
-- For page changes:
-    - keep forms, tables, dialogs consistent with current UI style
-    - ensure role-based button visibility and route access stay correct
-- For permission-related tasks:
-    - check menu visibility
-    - check page-level access
-    - check operation buttons
-    - check data-scope restrictions
-
-### SQL / Data Rules
-- Main schema comes from `hanye_take_out.sql`.
-- If fixing store / chain / manager relations, check whether `db-fix-manager-store-chain.sql` already covers part of the change.
-- Never drop or rewrite production-like data blindly.
-- Prefer additive fixes:
-    - new columns
-    - new indexes
-    - patch scripts
-    - backfill statements
-
----
-
-## Common Commands
-
-### Frontend (`hanye-take-out-vue3`)
 ```bash
-cd hanye-take-out-vue3
-D:\Develop\nvm\nodejs\npm install
-D:\Develop\nvm\nodejs\npm run dev
-D:\Develop\nvm\nodejs\npm run build
-D:\Develop\nvm\nodejs\npm run preview
+# 编译整个多模块项目（在 admin_backend/ 下执行）
+mvn clean package -DskipTests
+
+# 运行后端服务（入口：server 模块）
+mvn spring-boot:run -pl server
+
+# 运行测试
+mvn test -pl server
+```
+
+后端服务默认端口：**8081**，数据库：`hanye_take_out`。
+
+### 管理端前端 (`admin_frontend/`)
+
+```bash
+npm install
+npm run dev        # 开发服务器，端口 5173，自动代理到 localhost:8081
+npm run build      # 类型检查 + 构建
+npm run lint       # ESLint 修复
+npm run format     # Prettier 格式化 src/
+```
+
+### 用户端前端 (`client_frontend/`)
+
+```bash
+npm install
+npm run serve      # 开发服务器（Vue CLI）
+npm run build      # 生产构建
+```
+
+---
+
+## 后端架构
+
+`admin_backend` 是标准 Maven 多模块项目：
+
+```
+admin_backend/
+├── common/   # 工具类、常量、异常、JWT、Result 等公共代码
+├── pojo/     # DTO / Entity / VO（纯数据类，无业务逻辑）
+└── server/   # 业务主模块（Controller → Service → Mapper）
+```
+
+**请求路由：**
+- `/admin/**` → `controller/admin/`（需要管理员 JWT，`Authorization` header）
+- `/user/**`  → `controller/user/`（需要用户 JWT，`authentication` header）
+- 登录/注册接口被 `WebMvcConfiguration` 中的拦截器排除在外
+
+**关键横切机制：**
+- `AutoFillAspect`：AOP 切面，拦截所有带 `@AutoFill` 注解的 Mapper 方法，自动填充 `create_time / update_time / create_user / update_user` 字段。INSERT 填四个字段，UPDATE 只填两个更新字段，REG（注册）只填时间字段。
+- `BaseContext`：ThreadLocal 存储当前请求的用户/员工 ID，供 `AutoFillAspect` 读取。
+- `JacksonObjectMapper`：自定义序列化（Long → String 防精度丢失，时间格式统一）。
+- `@EnableCaching` + `@EnableScheduling`：启用 Spring 缓存和定时任务。
+
+**配置文件：**
+- `application.yml`：公共配置（端口 8081、MySQL、Redis、JWT 密钥）
+- `application-dev.yml`：开发环境覆盖（微信支付证书路径等敏感配置）
+
+---
+
+## 管理端前端架构
+
+```
+admin_frontend/src/
+├── api/          # 按业务模块拆分的 Axios 请求函数
+├── components/   # 全局通用组件
+├── constants/    # 常量（permission.ts 定义角色枚举和映射）
+├── store/        # Pinia store（用户信息，持久化到 localStorage）
+├── types/        # TypeScript 类型声明
+├── utils/        # request.ts（Axios 实例）、permission.ts、date.ts
+├── views/        # 页面组件，按路由模块组织
+└── router.ts     # 路由定义 + 权限守卫
+```
+
+**代理配置（vite.config.ts）：** 前端 `/api/*` 请求由 Vite 代理转发到 `http://localhost:8081/admin`，path 中 `/api` 前缀会被去掉。
+
+**权限体系（RBAC）：**
+- 三个角色：`EMPLOYEE`（普通员工）、`STORE_MANAGER`（店长）、`CHAIRMAN`（董事长）
+- 每个路由的 `meta.roles` 控制哪些角色可访问，路由守卫在 `router.ts` 中统一拦截
+- 角色别名（包括数字 `0/1/2`）通过 `ROLE_ALIAS_MAP` 统一规范化，新增角色映射时修改 `constants/permission.ts`
+
+**Axios 实例（`utils/request.ts`）：** 请求拦截器自动附加 `Authorization` token；响应拦截器处理业务错误码和 401 跳转登录。
+
+---
+
+## 数据库与 Redis
+
+- MySQL 数据库名：`hanye_take_out`，本地默认账密 `root/123456`
+- Redis 默认连接远程服务器（`application.yml` 中配置），本地开发若无访问权限需在 `application-dev.yml` 中覆盖为本地地址
+- MyBatis Mapper XML 位于 `server/src/main/resources/mapper/`，数据库迁移 SQL 位于 `server/src/main/resources/db/`
+
+---
+
+## 注意事项
+
+- `application-dev.yml` 中包含微信支付证书路径和 AppSecret 等敏感配置，本地开发需替换为自己的凭证
+- 用户端小程序登录依赖微信 `appid` + `secret`，未配置则无法完成登录流程
+- 新增 Mapper 方法如需自动填充公共字段，需加 `@AutoFill(OperationType.INSERT/UPDATE)` 注解
