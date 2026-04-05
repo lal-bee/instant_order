@@ -36,7 +36,7 @@ public interface CategoryMapper {
      * @param type
      * @return
      */
-    List<Category> getList(Integer type);
+    List<Category> getList(@Param("type") Integer type);
 
-    List<Category> getListByStoreId(Long storeId);
+    List<Category> getListByStoreId(@Param("storeId") Long storeId);
 }

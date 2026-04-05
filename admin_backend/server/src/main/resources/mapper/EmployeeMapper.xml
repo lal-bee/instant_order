@@ -45,7 +45,7 @@
                 and e.role = #{role}
             </if>
         </where>
-        order by FIELD(e.role, '2', 'CHAIRMAN', '1', 'MANAGER', 'STORE_MANAGER', '0', 'EMPLOYEE') asc, e.id desc
+        order by FIELD(e.role, '2', '1', '0') asc, e.id desc
     </select>
 
     <select id="getManagerOptions" resultType="fun.cyhgraph.entity.Employee">

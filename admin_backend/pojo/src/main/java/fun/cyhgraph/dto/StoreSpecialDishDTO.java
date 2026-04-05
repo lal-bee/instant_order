@@ -1,4 +1,4 @@
-package fun.cyhgraph.vo;
+package fun.cyhgraph.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,14 +10,11 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StoreDishConfigVO implements Serializable {
-    private Integer dishId;
+public class StoreSpecialDishDTO implements Serializable {
+    private Long storeId;
     private String name;
     private String pic;
-    private BigDecimal price;
     private String detail;
+    private BigDecimal price;
     private Integer categoryId;
-    private String categoryName;
-    private String dishType;
-    private Integer onShelf;
 }

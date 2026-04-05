@@ -30,6 +30,11 @@ public class GlobalExceptionHandler {
         Throwable cause = ex.getCause();
         if (cause != null) message = cause.getMessage();
         log.warn("数据库约束异常: {}", message);
+        if (message != null && message.contains("Duplicate entry")) {
+            String[] split = message.split(" ");
+            String value = split.length > 2 ? split[2] : "";
+            return Result.error(value + MessageConstant.ALREADY_EXiST);
+        }
         if (message != null && message.contains("cannot be null")) {
             if (message.contains("address_book_id")) {
                 return Result.error("订单表 address_book_id 不允许为 null，请执行迁移: ALTER TABLE orders MODIFY COLUMN address_book_id bigint DEFAULT NULL;");

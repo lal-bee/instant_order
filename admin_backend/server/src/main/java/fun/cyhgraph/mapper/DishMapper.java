@@ -8,6 +8,7 @@ import fun.cyhgraph.entity.Dish;
 import fun.cyhgraph.enumeration.OperationType;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
@@ -36,6 +37,15 @@ public interface DishMapper {
     List<Dish> getListByStoreAndCategory(@Param("storeId") Long storeId, @Param("categoryId") Integer categoryId);
 
     List<Dish> getByHeadquartersId(Long headquartersId);
+
+    List<Dish> getStandardByHeadquartersId(Long headquartersId);
+
+    List<Dish> getSpecialByStoreId(Long storeId);
+
+    Integer countByName(@Param("name") String name, @Param("excludeId") Integer excludeId);
+
+    @Delete("delete from dish where id = #{id}")
+    void deleteById(Integer id);
 
     @Select("select count(id) from dish where status = #{i}")
     Integer getByStatus(int i);

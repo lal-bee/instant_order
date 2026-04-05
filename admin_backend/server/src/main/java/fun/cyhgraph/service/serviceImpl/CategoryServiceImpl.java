@@ -8,13 +8,13 @@ import fun.cyhgraph.dto.CategoryTypePageDTO;
 import fun.cyhgraph.entity.Category;
 import fun.cyhgraph.entity.Employee;
 import fun.cyhgraph.entity.Store;
-import fun.cyhgraph.enumeration.RoleEnum;
 import fun.cyhgraph.exception.BaseException;
 import fun.cyhgraph.mapper.CategoryMapper;
 import fun.cyhgraph.mapper.EmployeeMapper;
 import fun.cyhgraph.mapper.StoreMapper;
 import fun.cyhgraph.result.PageResult;
 import fun.cyhgraph.service.CategoryService;
+import fun.cyhgraph.utils.RoleUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,7 +49,6 @@ public class CategoryServiceImpl implements CategoryService {
      * @return
      */
     public PageResult getPageList(CategoryTypePageDTO categoryTypePageDTO) {
-        categoryTypePageDTO.setHeadquartersId(resolveHeadquartersId(categoryTypePageDTO.getHeadquartersId()));
         PageHelper.startPage(categoryTypePageDTO.getPage(), categoryTypePageDTO.getPageSize());
         Page<Category> pagelist = categoryMapper.getPageList(categoryTypePageDTO);
         return new PageResult(pagelist.getTotal(), pagelist.getResult());
@@ -114,7 +113,7 @@ public class CategoryServiceImpl implements CategoryService {
         if (current == null) {
             throw new BaseException("当前登录员工不存在");
         }
-        if (RoleEnum.CHAIRMAN.name().equals(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole())) {
             // 董事长支持全局操作：未指定总部时不按总部过滤
             return requestHeadquartersId;
         }

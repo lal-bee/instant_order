@@ -7,6 +7,7 @@ import fun.cyhgraph.exception.BaseException;
 import fun.cyhgraph.mapper.EmployeeMapper;
 import fun.cyhgraph.mapper.StoreMapper;
 import fun.cyhgraph.service.StoreService;
+import fun.cyhgraph.utils.RoleUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +47,7 @@ public class StoreServiceImpl implements StoreService {
     @Override
     public Store getById(Long id) {
         Employee current = getCurrentEmployee();
-        if (isChairman(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole())) {
             return storeMapper.getById(id);
         }
         if (current.getStoreId() != null && id.equals(current.getStoreId())) {
@@ -64,7 +65,7 @@ public class StoreServiceImpl implements StoreService {
     @Override
     public List<Store> getList() {
         Employee current = getCurrentEmployee();
-        if (isChairman(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole())) {
             return storeMapper.getListWithDetail();
         }
         if (current.getStoreId() == null) {
@@ -82,17 +83,9 @@ public class StoreServiceImpl implements StoreService {
 
     private void ensureChairman() {
         Employee current = getCurrentEmployee();
-        if (!isChairman(current.getRole())) {
+        if (!RoleUtil.isChairman(current.getRole())) {
             throw new BaseException("只有董事长可以管理分店");
         }
-    }
-
-    private boolean isChairman(String role) {
-        return "2".equals(role) || "CHAIRMAN".equals(role);
-    }
-
-    private boolean isManager(String role) {
-        return "1".equals(role) || "MANAGER".equals(role) || "STORE_MANAGER".equals(role);
     }
 
     private void validateManagerEmployee(Integer managerEmployeeId) {
@@ -103,7 +96,7 @@ public class StoreServiceImpl implements StoreService {
         if (manager == null) {
             throw new BaseException("关联店长不存在");
         }
-        if (!isManager(manager.getRole())) {
+        if (!RoleUtil.isManager(manager.getRole())) {
             throw new BaseException("所选员工不是店长角色");
         }
     }

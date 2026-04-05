@@ -16,6 +16,7 @@ import fun.cyhgraph.mapper.EmployeeMapper;
 import fun.cyhgraph.mapper.StoreMapper;
 import fun.cyhgraph.result.PageResult;
 import fun.cyhgraph.service.EmployeeService;
+import fun.cyhgraph.utils.RoleUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -87,20 +88,20 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     public Employee getEmployeeById(Integer id) {
         Employee current = getCurrentEmployee();
-        if (isChairman(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole())) {
             return employeeMapper.getById(id);
         }
         Employee target = employeeMapper.getById(id);
         if (target == null) {
             return null;
         }
-        if (isManager(current.getRole())) {
+        if (RoleUtil.isManager(current.getRole())) {
             if (!current.getStoreId().equals(target.getStoreId())) {
                 throw new BaseException("店长只能查看本店员工信息");
             }
             return target;
         }
-        if (isEmployee(current.getRole()) && !current.getId().equals(target.getId())) {
+        if (RoleUtil.isEmployee(current.getRole()) && !current.getId().equals(target.getId())) {
             throw new BaseException("普通员工只能查看自己的信息");
         }
         return target;
@@ -112,7 +113,7 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     public PageResult employeePageList(PageDTO pageDTO) {
         Employee current = getCurrentEmployee();
-        if (isManager(current.getRole()) || isEmployee(current.getRole())) {
+        if (RoleUtil.isManager(current.getRole()) || RoleUtil.isEmployee(current.getRole())) {
             pageDTO.setStoreId(current.getStoreId());
         }
         // 传分页参数给PageHelper自动处理，会自动加上limit和count(*)返回分页结果和总记录数
@@ -141,7 +142,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = new Employee();
         BeanUtils.copyProperties(employeeDTO, employee);
         employeeMapper.update(employee);
-        if (isManager(employee.getRole())) {
+        if (RoleUtil.isManager(employee.getRole())) {
             storeMapper.updateManager(employee.getStoreId(), employee.getId());
         }
     }
@@ -155,11 +156,11 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (target == null) {
             return;
         }
-        if (isChairman(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole())) {
             employeeMapper.delete(id);
             return;
         }
-        if (isManager(current.getRole())) {
+        if (RoleUtil.isManager(current.getRole())) {
             if (!current.getStoreId().equals(target.getStoreId())) {
                 throw new BaseException("店长只能删除本店员工");
             }
@@ -189,11 +190,11 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (target == null) {
             return;
         }
-        if (isChairman(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole())) {
             employeeMapper.onOff(id);
             return;
         }
-        if (isManager(current.getRole()) && current.getStoreId().equals(target.getStoreId())) {
+        if (RoleUtil.isManager(current.getRole()) && current.getStoreId().equals(target.getStoreId())) {
             employeeMapper.onOff(id);
             return;
         }
@@ -212,13 +213,13 @@ public class EmployeeServiceImpl implements EmployeeService {
             employeeDTO.setRole(normalizeRole(employeeDTO.getRole()));
         }
         ensureEmployeeStoreRule(employeeDTO.getRole(), employeeDTO.getStoreId(), "新增员工");
-        if (isManager(current.getRole()) && !current.getStoreId().equals(employeeDTO.getStoreId())) {
+        if (RoleUtil.isManager(current.getRole()) && !current.getStoreId().equals(employeeDTO.getStoreId())) {
             throw new BaseException("店长只能新增本店员工");
         }
-        if (isManager(current.getRole()) && !isEmployee(employeeDTO.getRole())) {
+        if (RoleUtil.isManager(current.getRole()) && !RoleUtil.isEmployee(employeeDTO.getRole())) {
             throw new BaseException("店长只能新增普通员工");
         }
-        if (isEmployee(current.getRole())) {
+        if (RoleUtil.isEmployee(current.getRole())) {
             throw new BaseException("普通员工无权限新增员工");
         }
 
@@ -232,7 +233,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 为user其他字段填充默认值
         employee.setStatus(1);
         employeeMapper.addEmployee(employee);
-        if (isManager(employee.getRole())) {
+        if (RoleUtil.isManager(employee.getRole())) {
             storeMapper.updateManager(employee.getStoreId(), employee.getId());
         }
     }
@@ -262,7 +263,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<Employee> getManagerOptions(Boolean enabledOnly) {
         Employee current = getCurrentEmployee();
-        if (isChairman(current.getRole()) || isManager(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole()) || RoleUtil.isManager(current.getRole())) {
             return employeeMapper.getManagerOptions(enabledOnly);
         }
         throw new BaseException("无权限获取店长列表");
@@ -281,14 +282,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private void checkUpdatePermission(Employee current, Employee target, EmployeeDTO employeeDTO) {
-        if (isChairman(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole())) {
             return;
         }
-        if (isManager(current.getRole())) {
+        if (RoleUtil.isManager(current.getRole())) {
             if (!current.getStoreId().equals(target.getStoreId())) {
                 throw new BaseException("店长只能修改本店员工");
             }
-            if (employeeDTO.getRole() != null && !isEmployee(employeeDTO.getRole())) {
+            if (employeeDTO.getRole() != null && !RoleUtil.isEmployee(employeeDTO.getRole())) {
                 throw new BaseException("店长只能维护普通员工信息");
             }
             if (employeeDTO.getStoreId() == null) {
@@ -299,7 +300,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             }
             return;
         }
-        if (isEmployee(current.getRole())) {
+        if (RoleUtil.isEmployee(current.getRole())) {
             if (!current.getId().equals(target.getId())) {
                 throw new BaseException("普通员工只能修改自己的数据");
             }
@@ -310,46 +311,22 @@ public class EmployeeServiceImpl implements EmployeeService {
         throw new BaseException("无权限修改员工");
     }
 
-    private boolean isChairman(String role) {
-        return roleLevel(role) == 2;
-    }
-
-    private boolean isManager(String role) {
-        return roleLevel(role) == 1;
-    }
-
-    private boolean isEmployee(String role) {
-        return roleLevel(role) == 0;
-    }
-
-    private int roleLevel(String role) {
-        if (role == null) {
-            return -1;
-        }
-        return switch (role) {
-            case "2", "CHAIRMAN" -> 2;
-            case "1", "MANAGER", "STORE_MANAGER" -> 1;
-            case "0", "EMPLOYEE" -> 0;
-            default -> -1;
-        };
-    }
-
     private String normalizeRole(String role) {
-        int level = roleLevel(role);
-        if (level < 0) {
-            return role;
+        String normalizedRole = RoleUtil.normalize(role);
+        if (!RoleUtil.isValid(normalizedRole)) {
+            throw new BaseException("角色编码非法，仅支持0/1/2");
         }
-        return String.valueOf(level);
+        return normalizedRole;
     }
 
     private void ensureEmployeeStoreRule(String role, Long storeId, String actionLabel) {
-        if (isChairman(role)) {
+        if (RoleUtil.isChairman(role)) {
             return;
         }
-        if (isManager(role)) {
+        if (RoleUtil.isManager(role)) {
             return;
         }
-        if (isEmployee(role) && storeId == null) {
+        if (RoleUtil.isEmployee(role) && storeId == null) {
             throw new BaseException(actionLabel + "时，普通员工必须绑定分店");
         }
     }

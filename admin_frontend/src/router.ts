@@ -122,7 +122,7 @@ export const layoutChildrenRoutes: RouteRecordRaw[] = [
     path: 'store-menu',
     name: 'store_menu',
     component: () => import('./views/store-menu/index.vue'),
-    meta: { title: '门店菜单配置', icon: 'Tickets', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER] },
+    meta: { title: '门店菜单配置', icon: 'Tickets', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
   },
   {
     path: 'employee',

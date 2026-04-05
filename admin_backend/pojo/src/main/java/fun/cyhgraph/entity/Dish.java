@@ -20,6 +20,7 @@ public class Dish implements Serializable {
     private BigDecimal price;
     private Integer status;
     private Integer categoryId;
+    private Long storeId;
     private Long headquartersId;
     private Integer createUser;
     private Integer updateUser;

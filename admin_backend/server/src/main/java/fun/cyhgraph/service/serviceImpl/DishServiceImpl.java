@@ -11,7 +11,6 @@ import fun.cyhgraph.entity.Dish;
 import fun.cyhgraph.entity.DishFlavor;
 import fun.cyhgraph.entity.Employee;
 import fun.cyhgraph.entity.Store;
-import fun.cyhgraph.enumeration.RoleEnum;
 import fun.cyhgraph.exception.DeleteNotAllowedException;
 import fun.cyhgraph.exception.BaseException;
 import fun.cyhgraph.mapper.DishFlavorMapper;
@@ -21,6 +20,7 @@ import fun.cyhgraph.mapper.SetmealDishMapper;
 import fun.cyhgraph.mapper.StoreMapper;
 import fun.cyhgraph.result.PageResult;
 import fun.cyhgraph.service.DishService;
+import fun.cyhgraph.utils.RoleUtil;
 import fun.cyhgraph.vo.DishVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -190,7 +190,7 @@ public class DishServiceImpl implements DishService {
         if (current == null) {
             throw new BaseException("当前登录员工不存在");
         }
-        if (RoleEnum.CHAIRMAN.name().equals(current.getRole())) {
+        if (RoleUtil.isChairman(current.getRole())) {
             // 董事长支持全局操作：未指定总部时不按总部过滤
             return requestHeadquartersId;
         }
