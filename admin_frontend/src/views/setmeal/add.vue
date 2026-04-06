@@ -134,7 +134,7 @@ const onFileChange1 = (e: Event) => {
 // 取消修改
 const cancel = () => {
   router.push({
-    path: '/headquarters/setmeal',
+    path: '/setmeal',
   })
 }
 
@@ -244,7 +244,7 @@ const submit = async (keep: any) => {
       } else {
         // 保存退出
         router.push({
-          path: '/headquarters/setmeal',
+          path: '/setmeal',
         })
       }
     }
@@ -261,7 +261,7 @@ const submit = async (keep: any) => {
         type: 'success',
       })
       router.push({
-        path: '/headquarters/setmeal',
+        path: '/setmeal',
       })
     }
   } else {
@@ -459,3 +459,4 @@ img {
   }
 }
 </style>
+

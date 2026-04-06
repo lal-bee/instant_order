@@ -6,7 +6,6 @@
     <update id="update">
         update category
         <set>
-            <if test="headquartersId != null">headquarters_id = #{headquartersId},</if>
             <if test="name != null">name = #{name},</if>
             <if test="type != null">type = #{type},</if>
             <if test="sort != null">sort = #{sort},</if>
@@ -42,10 +41,17 @@
     <select id="getListByStoreId" resultType="fun.cyhgraph.entity.Category">
         select c.*
         from category c
-                 inner join dish d on d.category_id = c.id and d.status = 1
-                 inner join store_dish sd on sd.dish_id = d.id and sd.status = 1
         where c.status = 1
-          and sd.store_id = #{storeId}
+          and exists (
+            select 1
+            from dish d
+            where d.category_id = c.id
+              and d.status = 1
+              and (
+                (d.dish_scope = 1 or (d.dish_scope is null and d.store_id is null))
+                or ((d.dish_scope = 2 or (d.dish_scope is null and d.store_id is not null)) and d.store_id = #{storeId})
+              )
+          )
         group by c.id
         order by c.sort asc, c.create_time desc
     </select>

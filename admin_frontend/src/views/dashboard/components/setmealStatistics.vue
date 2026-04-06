@@ -3,7 +3,7 @@
     <h2 class="homeTitle">
       套餐总览
       <div class="more">
-        <router-link to="/headquarters/setmeal">套餐管理</router-link>
+        <router-link to="/setmeal">套餐管理</router-link>
         <el-icon>
           <ArrowRight />
         </el-icon>
@@ -30,7 +30,7 @@
           <span class="num">{{ setMealData.discontinued }}</span>
         </li>
         <li v-if="canOperate" class="add">
-          <router-link to="/headquarters/setmeal/add">
+          <router-link to="/setmeal/add">
             <el-icon>
               <CirclePlus />
             </el-icon>
@@ -60,3 +60,4 @@ const userInfoStore = useUserInfoStore()
 const canOperate = computed(() => isChairman(userInfoStore.userInfo?.role))
 
 </script>
+

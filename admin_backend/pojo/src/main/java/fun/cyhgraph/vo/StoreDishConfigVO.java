@@ -12,12 +12,17 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class StoreDishConfigVO implements Serializable {
     private Integer dishId;
+    private String dishName;
     private String name;
     private String pic;
     private BigDecimal price;
     private String detail;
     private Integer categoryId;
     private String categoryName;
+    private Integer status;
+    private Long storeId;
+    private String storeName;
     private String dishType;
+    private Boolean editable;
     private Integer onShelf;
 }

@@ -2,7 +2,6 @@ package fun.cyhgraph.mapper;
 
 import com.github.pagehelper.Page;
 import fun.cyhgraph.annotation.AutoFill;
-import fun.cyhgraph.dto.DishDTO;
 import fun.cyhgraph.dto.DishPageDTO;
 import fun.cyhgraph.entity.Dish;
 import fun.cyhgraph.enumeration.OperationType;
@@ -36,17 +35,21 @@ public interface DishMapper {
 
     List<Dish> getListByStoreAndCategory(@Param("storeId") Long storeId, @Param("categoryId") Integer categoryId);
 
-    List<Dish> getByHeadquartersId(Long headquartersId);
-
-    List<Dish> getStandardByHeadquartersId(Long headquartersId);
+    List<Dish> getAllStandardDish();
 
     List<Dish> getSpecialByStoreId(Long storeId);
 
-    Integer countByName(@Param("name") String name, @Param("excludeId") Integer excludeId);
+    Integer countByScopedName(@Param("name") String name,
+                              @Param("excludeId") Integer excludeId,
+                              @Param("dishScope") Integer dishScope,
+                              @Param("storeId") Long storeId);
 
     @Delete("delete from dish where id = #{id}")
     void deleteById(Integer id);
 
     @Select("select count(id) from dish where status = #{i}")
     Integer getByStatus(int i);
+
+    @Update("update dish set status = #{status} where id = #{id}")
+    void updateStatusById(@Param("id") Integer id, @Param("status") Integer status);
 }

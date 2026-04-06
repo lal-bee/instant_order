@@ -53,7 +53,7 @@ const submit = async () => {
         type: 'success',
       })
       router.push({
-        path: '/headquarters/category',
+        path: '/category',
       })
     } else {
       console.log('form not valid!');
@@ -66,7 +66,7 @@ const submit = async () => {
 // 取消修改
 const cancel = () => {
   router.push({
-    path: '/headquarters/category',
+    path: '/category',
   })
 }
 
@@ -140,3 +140,4 @@ img {
   margin: 30px 0 0 200px;
 }
 </style>
+

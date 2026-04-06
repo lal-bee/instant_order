@@ -2,6 +2,7 @@ package fun.cyhgraph.service;
 
 import fun.cyhgraph.dto.StoreMenuConfigDTO;
 import fun.cyhgraph.dto.StoreSpecialDishDTO;
+import fun.cyhgraph.dto.StoreDishStatusDTO;
 import fun.cyhgraph.entity.Category;
 import fun.cyhgraph.vo.StoreDishConfigVO;
 
@@ -19,4 +20,6 @@ public interface StoreMenuService {
     void updateSpecialDish(Integer dishId, StoreSpecialDishDTO storeSpecialDishDTO);
 
     void deleteSpecialDish(Integer dishId);
+
+    void updateDishStatus(StoreDishStatusDTO storeDishStatusDTO);
 }

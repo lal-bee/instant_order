@@ -1,10 +1,10 @@
 import request from '@/utils/request'
 
-export const getStoreMenuDishListAPI = (storeId: number) => {
+export const getStoreMenuDishListAPI = (storeId?: number) => {
   return request({
     url: '/store-menu/dishes',
     method: 'get',
-    params: { storeId },
+    params: storeId ? { storeId } : {},
   })
 }
 
@@ -60,5 +60,13 @@ export const deleteStoreSpecialDishAPI = (dishId: number) => {
   return request({
     url: `/store-menu/special-dish/${dishId}`,
     method: 'delete',
+  })
+}
+
+export const updateStoreMenuDishStatusAPI = (params: { storeId: number; dishId: number; status: number }) => {
+  return request({
+    url: '/store-menu/status',
+    method: 'put',
+    data: params,
   })
 }

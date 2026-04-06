@@ -2,6 +2,7 @@ package fun.cyhgraph.controller.admin;
 
 import fun.cyhgraph.dto.StoreMenuConfigDTO;
 import fun.cyhgraph.dto.StoreSpecialDishDTO;
+import fun.cyhgraph.dto.StoreDishStatusDTO;
 import fun.cyhgraph.entity.Category;
 import fun.cyhgraph.result.Result;
 import fun.cyhgraph.service.StoreMenuService;
@@ -29,7 +30,7 @@ public class StoreMenuController {
     private StoreMenuService storeMenuService;
 
     @GetMapping("/dishes")
-    public Result<List<StoreDishConfigVO>> getStoreDishConfigList(@RequestParam Long storeId) {
+    public Result<List<StoreDishConfigVO>> getStoreDishConfigList(@RequestParam(required = false) Long storeId) {
         return Result.success(storeMenuService.getStoreDishConfigList(storeId));
     }
 
@@ -41,6 +42,12 @@ public class StoreMenuController {
     @PutMapping("/config")
     public Result configStoreMenu(@RequestBody StoreMenuConfigDTO storeMenuConfigDTO) {
         storeMenuService.configStoreMenu(storeMenuConfigDTO);
+        return Result.success();
+    }
+
+    @PutMapping("/status")
+    public Result updateDishStatus(@RequestBody StoreDishStatusDTO storeDishStatusDTO) {
+        storeMenuService.updateDishStatus(storeDishStatusDTO);
         return Result.success();
     }
 

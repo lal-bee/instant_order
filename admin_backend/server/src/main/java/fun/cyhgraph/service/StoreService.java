@@ -13,8 +13,6 @@ public interface StoreService {
 
     Store getById(Long id);
 
-    List<Store> getByHeadquartersId(Long headquartersId);
-
     List<Store> getList();
 
     void onOff(Long id);

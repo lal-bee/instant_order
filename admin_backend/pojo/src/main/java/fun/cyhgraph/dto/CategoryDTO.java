@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 public class CategoryDTO {
 
     private Integer id;
-    private Long headquartersId;
     private String name;
     private Integer type;
     private Integer sort;

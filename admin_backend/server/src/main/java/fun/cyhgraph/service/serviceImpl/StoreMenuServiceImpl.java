@@ -1,14 +1,15 @@
 package fun.cyhgraph.service.serviceImpl;
 
-import fun.cyhgraph.context.BaseContext;
+import fun.cyhgraph.constant.DishScopeConstant;
 import fun.cyhgraph.constant.StatusConstant;
+import fun.cyhgraph.context.BaseContext;
+import fun.cyhgraph.dto.StoreDishStatusDTO;
 import fun.cyhgraph.dto.StoreMenuConfigDTO;
 import fun.cyhgraph.dto.StoreSpecialDishDTO;
 import fun.cyhgraph.entity.Category;
 import fun.cyhgraph.entity.Dish;
 import fun.cyhgraph.entity.Employee;
 import fun.cyhgraph.entity.Store;
-import fun.cyhgraph.entity.StoreDish;
 import fun.cyhgraph.exception.BaseException;
 import fun.cyhgraph.mapper.CategoryMapper;
 import fun.cyhgraph.mapper.DishMapper;
@@ -25,12 +26,15 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 @Service
 public class StoreMenuServiceImpl implements StoreMenuService {
+
+    private static final String DISH_TYPE_STANDARD = "标准菜品";
+    private static final String DISH_TYPE_SPECIAL = "特色菜品";
 
     @Autowired
     private StoreMapper storeMapper;
@@ -46,71 +50,43 @@ public class StoreMenuServiceImpl implements StoreMenuService {
     @Override
     public List<StoreDishConfigVO> getStoreDishConfigList(Long storeId) {
         Employee current = getCurrentEmployee();
-        checkStoreViewPermission(storeId, current);
-        Store store = storeMapper.getById(storeId);
-        if (store == null) {
-            throw new BaseException("门店不存在");
+        ensureCanViewStoreMenu(current);
+        List<Store> visibleStoreList = resolveVisibleStores(storeId, current);
+        if (visibleStoreList.isEmpty()) {
+            return Collections.emptyList();
         }
-        List<Dish> standardDishList = dishMapper.getStandardByHeadquartersId(store.getHeadquartersId());
-        List<Dish> specialDishList = dishMapper.getSpecialByStoreId(storeId);
-        List<Integer> selectedDishIds = storeDishMapper.getDishIdsByStoreId(storeId);
-        Set<Integer> selectedSet = new HashSet<>(selectedDishIds);
+
+        Map<Integer, String> categoryNameCache = new java.util.HashMap<>();
         List<StoreDishConfigVO> result = new ArrayList<>();
-        appendDishVO(result, standardDishList, "STANDARD", selectedSet);
-        appendDishVO(result, specialDishList, "SPECIAL", selectedSet);
+        for (Store store : visibleStoreList) {
+            List<Dish> standardDishList = getStandardDishListByStore();
+            List<Dish> specialDishList = dishMapper.getSpecialByStoreId(store.getId());
+
+            appendDishVO(result, standardDishList, store, categoryNameCache, DISH_TYPE_STANDARD, current);
+            appendDishVO(result, specialDishList, store, categoryNameCache, DISH_TYPE_SPECIAL, current);
+        }
         return result;
     }
 
     @Override
     public List<Category> getStoreMenuCategoryList() {
+        Employee current = getCurrentEmployee();
+        ensureCanViewStoreMenu(current);
         return categoryMapper.getList(1);
     }
 
     @Override
     public void configStoreMenu(StoreMenuConfigDTO storeMenuConfigDTO) {
-        Long storeId = storeMenuConfigDTO.getStoreId();
-        Employee current = getCurrentEmployee();
-        checkStoreWritePermission(storeId, current);
-        Store store = storeMapper.getById(storeId);
-        if (store == null) {
-            throw new BaseException("门店不存在");
-        }
-        storeDishMapper.deleteByStoreId(storeId);
-        if (storeMenuConfigDTO.getDishIds() == null || storeMenuConfigDTO.getDishIds().isEmpty()) {
-            return;
-        }
-        List<Dish> standardDishList = dishMapper.getStandardByHeadquartersId(store.getHeadquartersId());
-        List<Dish> specialDishList = dishMapper.getSpecialByStoreId(storeId);
-        Set<Integer> allowedDishIdSet = new HashSet<>();
-        for (Dish dish : standardDishList) {
-            allowedDishIdSet.add(dish.getId());
-        }
-        for (Dish dish : specialDishList) {
-            allowedDishIdSet.add(dish.getId());
-        }
-        for (Integer dishId : storeMenuConfigDTO.getDishIds()) {
-            if (!allowedDishIdSet.contains(dishId)) {
-                continue;
-            }
-            StoreDish storeDish = new StoreDish();
-            storeDish.setStoreId(storeId);
-            storeDish.setDishId(dishId);
-            storeDish.setStatus(1);
-            storeDishMapper.add(storeDish);
-        }
+        throw new BaseException("当前版本不再支持门店级标准菜上架配置，请直接修改菜品status");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void addSpecialDish(StoreSpecialDishDTO storeSpecialDishDTO) {
-        validateSpecialDishPayload(storeSpecialDishDTO, null);
         Employee current = getCurrentEmployee();
         Long targetStoreId = resolveTargetStoreIdForWrite(storeSpecialDishDTO.getStoreId(), current);
-        checkStoreWritePermission(targetStoreId, current);
-        Store store = storeMapper.getById(targetStoreId);
-        if (store == null) {
-            throw new BaseException("门店不存在");
-        }
+        validateSpecialDishPayload(storeSpecialDishDTO, null, DishScopeConstant.STORE_SPECIAL, targetStoreId);
+        requireStore(targetStoreId);
         validateCategoryForSpecialDish(storeSpecialDishDTO.getCategoryId());
 
         Dish dish = new Dish();
@@ -119,16 +95,10 @@ public class StoreMenuServiceImpl implements StoreMenuService {
         dish.setDetail(storeSpecialDishDTO.getDetail().trim());
         dish.setPrice(storeSpecialDishDTO.getPrice());
         dish.setCategoryId(storeSpecialDishDTO.getCategoryId());
-        dish.setStatus(1);
+        dish.setStatus(StatusConstant.ENABLE);
         dish.setStoreId(targetStoreId);
-        dish.setHeadquartersId(store.getHeadquartersId());
+        dish.setDishScope(DishScopeConstant.STORE_SPECIAL);
         dishMapper.addDish(dish);
-
-        StoreDish storeDish = new StoreDish();
-        storeDish.setStoreId(targetStoreId);
-        storeDish.setDishId(dish.getId());
-        storeDish.setStatus(1);
-        storeDishMapper.add(storeDish);
     }
 
     @Override
@@ -138,18 +108,27 @@ public class StoreMenuServiceImpl implements StoreMenuService {
             throw new BaseException("请求体不能为空");
         }
         Employee current = getCurrentEmployee();
+        if (RoleUtil.isEmployee(current.getRole())) {
+            throw new BaseException("普通店员无编辑权限");
+        }
         Dish origin = dishMapper.getById(dishId);
         if (origin == null) {
             throw new BaseException("菜品不存在");
         }
-        if (origin.getStoreId() == null) {
-            throw new BaseException("标准菜品不允许在门店菜单中修改");
+        if (RoleUtil.isChairman(current.getRole())) {
+            Integer scope = isStandardDish(origin) ? DishScopeConstant.STANDARD : DishScopeConstant.STORE_SPECIAL;
+            validateSpecialDishPayload(storeSpecialDishDTO, dishId, scope, origin.getStoreId());
+        } else {
+            if (origin.getStoreId() == null) {
+                throw new BaseException("店长不能修改标准菜品");
+            }
+            ensureManagerOwnStoreOrChairman(origin.getStoreId(), current);
+            if (storeSpecialDishDTO.getStoreId() != null && !storeSpecialDishDTO.getStoreId().equals(origin.getStoreId())) {
+                throw new BaseException("无权操作其他门店数据");
+            }
+            validateSpecialDishPayload(storeSpecialDishDTO, dishId, DishScopeConstant.STORE_SPECIAL, origin.getStoreId());
         }
-        checkStoreWritePermission(origin.getStoreId(), current);
-        if (storeSpecialDishDTO.getStoreId() != null && !storeSpecialDishDTO.getStoreId().equals(origin.getStoreId())) {
-            throw new BaseException("门店特色菜不允许跨门店修改归属");
-        }
-        validateSpecialDishPayload(storeSpecialDishDTO, dishId);
+
         validateCategoryForSpecialDish(storeSpecialDishDTO.getCategoryId());
 
         Dish updateDish = new Dish();
@@ -167,31 +146,211 @@ public class StoreMenuServiceImpl implements StoreMenuService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteSpecialDish(Integer dishId) {
         Employee current = getCurrentEmployee();
+        if (RoleUtil.isEmployee(current.getRole())) {
+            throw new BaseException("普通店员无编辑权限");
+        }
         Dish origin = dishMapper.getById(dishId);
         if (origin == null) {
             return;
         }
-        if (origin.getStoreId() == null) {
-            throw new BaseException("标准菜品不允许在门店菜单中删除");
+        if (!RoleUtil.isChairman(current.getRole()) && origin.getStoreId() == null) {
+            throw new BaseException("店长不能删除标准菜品");
         }
-        checkStoreWritePermission(origin.getStoreId(), current);
+        ensureManagerOwnStoreOrChairman(origin.getStoreId(), current);
         dishMapper.deleteById(dishId);
+        // 兼容历史数据：若此前给特色菜写过 store_dish，这里一并清理
         storeDishMapper.deleteByDishId(dishId);
     }
 
-    private void appendDishVO(List<StoreDishConfigVO> result, List<Dish> dishList, String dishType, Set<Integer> selectedSet) {
+    @Override
+    public void updateDishStatus(StoreDishStatusDTO storeDishStatusDTO) {
+        if (storeDishStatusDTO == null) {
+            throw new BaseException("请求体不能为空");
+        }
+        Long storeId = storeDishStatusDTO.getStoreId();
+        Integer dishId = storeDishStatusDTO.getDishId();
+        Integer status = storeDishStatusDTO.getStatus();
+        if (storeId == null || dishId == null || status == null) {
+            throw new BaseException("storeId、dishId、status不能为空");
+        }
+        if (!StatusConstant.ENABLE.equals(status) && !StatusConstant.UNABLE.equals(status)) {
+            throw new BaseException("status参数非法");
+        }
+
+        Employee current = getCurrentEmployee();
+        Dish dish = dishMapper.getById(dishId);
+        if (dish == null) {
+            throw new BaseException("菜品不存在");
+        }
+        requireStore(storeId);
+        ensureCanUpdateDishStatus(current, dish, storeId);
+        dishMapper.updateStatusById(dishId, status);
+    }
+
+    private void appendDishVO(List<StoreDishConfigVO> result,
+                              List<Dish> dishList,
+                              Store store,
+                              Map<Integer, String> categoryNameCache,
+                              String dishType,
+                              Employee current) {
         for (Dish dish : dishList) {
+            Integer status = resolveStatus(dish);
             StoreDishConfigVO vo = new StoreDishConfigVO();
             vo.setDishId(dish.getId());
+            vo.setDishName(dish.getName());
             vo.setName(dish.getName());
             vo.setPic(dish.getPic());
             vo.setPrice(dish.getPrice());
             vo.setDetail(dish.getDetail());
             vo.setCategoryId(dish.getCategoryId());
+            vo.setCategoryName(resolveCategoryName(dish.getCategoryId(), categoryNameCache));
+            vo.setStatus(status);
+            vo.setOnShelf(status);
+            vo.setStoreId(store.getId());
+            vo.setStoreName(store.getName());
             vo.setDishType(dishType);
-            vo.setOnShelf(selectedSet.contains(dish.getId()) ? 1 : 0);
+            vo.setEditable(canEditDish(current, store.getId(), dishType));
             result.add(vo);
         }
+    }
+
+    private Integer resolveStatus(Dish dish) {
+        if (dish.getStatus() == null) {
+            return StatusConstant.ENABLE;
+        }
+        return dish.getStatus();
+    }
+
+    private List<Dish> getStandardDishListByStore() {
+        return dishMapper.getAllStandardDish();
+    }
+
+    private String resolveCategoryName(Integer categoryId, Map<Integer, String> categoryNameCache) {
+        if (categoryId == null) {
+            return "";
+        }
+        if (categoryNameCache.containsKey(categoryId)) {
+            return categoryNameCache.get(categoryId);
+        }
+        Category category = categoryMapper.getById(categoryId);
+        String categoryName = category == null ? "" : category.getName();
+        categoryNameCache.put(categoryId, categoryName);
+        return categoryName;
+    }
+
+    private List<Store> resolveVisibleStores(Long requestStoreId, Employee current) {
+        if (RoleUtil.isChairman(current.getRole())) {
+            if (requestStoreId != null) {
+                return Collections.singletonList(requireStore(requestStoreId));
+            }
+            return storeMapper.getList();
+        }
+        if (RoleUtil.isManager(current.getRole()) || RoleUtil.isEmployee(current.getRole())) {
+            if (current.getStoreId() == null) {
+                throw new BaseException("当前账号未绑定门店");
+            }
+            if (requestStoreId != null && !requestStoreId.equals(current.getStoreId())) {
+                throw new BaseException("无权查看其他门店数据");
+            }
+            return Collections.singletonList(requireStore(current.getStoreId()));
+        }
+        throw new BaseException("角色非法，无法访问门店菜单");
+    }
+
+    private void ensureCanViewStoreMenu(Employee current) {
+        if (!(RoleUtil.isChairman(current.getRole()) || RoleUtil.isManager(current.getRole()) || RoleUtil.isEmployee(current.getRole()))) {
+            throw new BaseException("角色非法，无法访问门店菜单");
+        }
+    }
+
+    private boolean canEditDish(Employee current, Long rowStoreId, String dishType) {
+        if (RoleUtil.isChairman(current.getRole())) {
+            return true;
+        }
+        if (RoleUtil.isManager(current.getRole())) {
+            return current.getStoreId() != null
+                    && current.getStoreId().equals(rowStoreId)
+                    && DISH_TYPE_SPECIAL.equals(dishType);
+        }
+        return false;
+    }
+
+    private boolean isStandardDish(Dish dish) {
+        if (dish == null) {
+            return false;
+        }
+        if (DishScopeConstant.STANDARD.equals(dish.getDishScope())) {
+            return true;
+        }
+        if (DishScopeConstant.STORE_SPECIAL.equals(dish.getDishScope())) {
+            return false;
+        }
+        return dish.getStoreId() == null;
+    }
+
+    private void ensureCanUpdateDishStatus(Employee current, Dish dish, Long storeId) {
+        if (RoleUtil.isEmployee(current.getRole())) {
+            throw new BaseException("普通店员无编辑权限");
+        }
+        if (RoleUtil.isChairman(current.getRole())) {
+            return;
+        }
+        if (RoleUtil.isManager(current.getRole())) {
+            if (current.getStoreId() == null || !current.getStoreId().equals(storeId)) {
+                throw new BaseException("无权操作其他门店数据");
+            }
+            if (isStandardDish(dish)) {
+                throw new BaseException("店长不能管理标准菜品");
+            }
+            if (!storeId.equals(dish.getStoreId())) {
+                throw new BaseException("无权操作其他门店数据");
+            }
+            return;
+        }
+        throw new BaseException("角色非法，无法执行写操作");
+    }
+
+    private void ensureManagerOwnStoreOrChairman(Long targetStoreId, Employee current) {
+        if (RoleUtil.isChairman(current.getRole())) {
+            return;
+        }
+        if (RoleUtil.isManager(current.getRole()) && current.getStoreId() != null && current.getStoreId().equals(targetStoreId)) {
+            return;
+        }
+        if (RoleUtil.isEmployee(current.getRole())) {
+            throw new BaseException("普通店员无编辑权限");
+        }
+        throw new BaseException("无权操作其他门店数据");
+    }
+
+    private Long resolveTargetStoreIdForWrite(Long requestStoreId, Employee current) {
+        if (RoleUtil.isEmployee(current.getRole())) {
+            throw new BaseException("普通店员无编辑权限");
+        }
+        if (RoleUtil.isChairman(current.getRole())) {
+            if (requestStoreId == null) {
+                throw new BaseException("董事长新增门店特色菜时必须指定门店");
+            }
+            return requestStoreId;
+        }
+        if (RoleUtil.isManager(current.getRole())) {
+            if (current.getStoreId() == null) {
+                throw new BaseException("当前店长未绑定分店");
+            }
+            if (requestStoreId != null && !requestStoreId.equals(current.getStoreId())) {
+                throw new BaseException("无权操作其他门店数据");
+            }
+            return current.getStoreId();
+        }
+        throw new BaseException("角色非法，无法执行写操作");
+    }
+
+    private Store requireStore(Long storeId) {
+        Store store = storeMapper.getById(storeId);
+        if (store == null) {
+            throw new BaseException("门店不存在");
+        }
+        return store;
     }
 
     private Employee getCurrentEmployee() {
@@ -204,47 +363,6 @@ public class StoreMenuServiceImpl implements StoreMenuService {
             throw new BaseException("当前登录员工不存在");
         }
         return current;
-    }
-
-    private void checkStoreViewPermission(Long storeId, Employee current) {
-        if (RoleUtil.isChairman(current.getRole())) {
-            return;
-        }
-        if ((RoleUtil.isManager(current.getRole()) || RoleUtil.isEmployee(current.getRole()))
-                && current.getStoreId() != null
-                && storeId.equals(current.getStoreId())) {
-            return;
-        }
-        throw new BaseException("无权限查看该门店菜单");
-    }
-
-    private void checkStoreWritePermission(Long storeId, Employee current) {
-        if (RoleUtil.isChairman(current.getRole())) {
-            return;
-        }
-        if (RoleUtil.isManager(current.getRole()) && current.getStoreId() != null && storeId.equals(current.getStoreId())) {
-            return;
-        }
-        throw new BaseException("无权限操作该门店菜单");
-    }
-
-    private Long resolveTargetStoreIdForWrite(Long requestStoreId, Employee current) {
-        if (RoleUtil.isChairman(current.getRole())) {
-            if (requestStoreId == null) {
-                throw new BaseException("董事长新增门店特色菜时必须指定门店");
-            }
-            return requestStoreId;
-        }
-        if (RoleUtil.isManager(current.getRole())) {
-            if (current.getStoreId() == null) {
-                throw new BaseException("当前店长未绑定分店");
-            }
-            if (requestStoreId != null && !requestStoreId.equals(current.getStoreId())) {
-                throw new BaseException("店长只能操作自己门店的特色菜");
-            }
-            return current.getStoreId();
-        }
-        throw new BaseException("普通员工无权限操作门店特色菜");
     }
 
     private void validateCategoryForSpecialDish(Integer categoryId) {
@@ -260,7 +378,10 @@ public class StoreMenuServiceImpl implements StoreMenuService {
         }
     }
 
-    private void validateSpecialDishPayload(StoreSpecialDishDTO storeSpecialDishDTO, Integer excludeDishId) {
+    private void validateSpecialDishPayload(StoreSpecialDishDTO storeSpecialDishDTO,
+                                            Integer excludeDishId,
+                                            Integer dishScope,
+                                            Long targetStoreId) {
         if (storeSpecialDishDTO == null) {
             throw new BaseException("请求体不能为空");
         }
@@ -274,9 +395,17 @@ public class StoreMenuServiceImpl implements StoreMenuService {
         if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
             throw new BaseException("菜品价格必须大于等于0");
         }
-        Integer sameNameCount = dishMapper.countByName(storeSpecialDishDTO.getName().trim(), excludeDishId);
+        Integer sameNameCount = dishMapper.countByScopedName(
+                storeSpecialDishDTO.getName().trim(),
+                excludeDishId,
+                dishScope,
+                targetStoreId
+        );
         if (sameNameCount != null && sameNameCount > 0) {
-            throw new BaseException("菜品名称已存在，请更换名称");
+            if (DishScopeConstant.STANDARD.equals(dishScope)) {
+                throw new BaseException("已存在同名标准菜，请更换名称");
+            }
+            throw new BaseException("当前门店已存在同名特色菜，请更换名称");
         }
     }
 }

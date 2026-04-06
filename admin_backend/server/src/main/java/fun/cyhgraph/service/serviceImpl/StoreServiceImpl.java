@@ -57,12 +57,6 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    public List<Store> getByHeadquartersId(Long headquartersId) {
-        ensureChairman();
-        return storeMapper.getByHeadquartersId(headquartersId);
-    }
-
-    @Override
     public List<Store> getList() {
         Employee current = getCurrentEmployee();
         if (RoleUtil.isChairman(current.getRole())) {

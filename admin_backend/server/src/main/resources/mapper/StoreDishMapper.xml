@@ -16,6 +16,13 @@
           and sd.status = 1
           and d.category_id = #{categoryId}
           and d.status = 1
+          and (d.dish_scope = 1 or (d.dish_scope is null and d.store_id is null))
     </select>
+
+    <insert id="upsertStatus">
+        insert into store_dish (store_id, dish_id, status, create_user, update_user, create_time, update_time)
+        values (#{storeId}, #{dishId}, #{status}, 0, 0, now(), now())
+        on duplicate key update status = values(status), update_time = now(), update_user = 0
+    </insert>
 
 </mapper>

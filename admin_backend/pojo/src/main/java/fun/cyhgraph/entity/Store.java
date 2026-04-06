@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
 public class Store implements Serializable {
 
     private Long id;
-    private Long headquartersId;
-    private String headquartersName;
     private String name;
     private Integer managerEmployeeId;
     private String managerName;

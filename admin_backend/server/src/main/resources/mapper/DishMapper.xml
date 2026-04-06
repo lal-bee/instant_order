@@ -4,9 +4,9 @@
 <mapper namespace="fun.cyhgraph.mapper.DishMapper">
 
     <insert id="addDish" useGeneratedKeys="true" keyProperty="id">
-        insert into dish (name, pic, detail, price, category_id, store_id, headquarters_id, create_user, update_user, create_time, update_time)
+        insert into dish (name, pic, detail, price, category_id, store_id, dish_scope, standard_dish_id, create_user, update_user, create_time, update_time)
         VALUES
-        (#{name}, #{pic}, #{detail}, #{price}, #{categoryId}, #{storeId}, #{headquartersId},
+        (#{name}, #{pic}, #{detail}, #{price}, #{categoryId}, #{storeId}, #{dishScope}, #{standardDishId},
          #{createUser}, #{updateUser}, #{createTime}, #{updateTime})
     </insert>
 
@@ -19,7 +19,8 @@
             <if test="price != null">price = #{price},</if>
             <if test="categoryId != null">category_id = #{categoryId},</if>
             <if test="storeId != null">store_id = #{storeId},</if>
-            <if test="headquartersId != null">headquarters_id = #{headquartersId},</if>
+            <if test="dishScope != null">dish_scope = #{dishScope},</if>
+            <if test="standardDishId != null">standard_dish_id = #{standardDishId},</if>
             <if test="createUser != null">create_user = #{createUser},</if>
             <if test="updateUser != null">update_user = #{updateUser},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
@@ -41,9 +42,6 @@
             <if test="name != null and name != ''">
                 and name like concat('%', #{name}, '%')
             </if>
-            <if test="headquartersId != null">
-                and headquarters_id = #{headquartersId}
-            </if>
             <if test="categoryId != null">
                 and category_id = #{categoryId}
             </if>
@@ -59,9 +57,6 @@
             <if test="name != null and name != ''">
                 and name like concat('%', #{name}, '%')
             </if>
-            <if test="headquartersId != null">
-                and headquarters_id = #{headquartersId}
-            </if>
             <if test="categoryId != null">
                 and category_id = #{categoryId}
             </if>
@@ -75,31 +70,42 @@
     <select id="getListByStoreAndCategory" resultType="fun.cyhgraph.entity.Dish">
         select d.*
         from dish d
-                 inner join store_dish sd on d.id = sd.dish_id
-        where sd.store_id = #{storeId}
-          and sd.status = 1
-          and d.category_id = #{categoryId}
+        where d.category_id = #{categoryId}
           and d.status = 1
+          and (
+            (d.dish_scope = 1 or (d.dish_scope is null and d.store_id is null))
+            or ((d.dish_scope = 2 or (d.dish_scope is null and d.store_id is not null)) and d.store_id = #{storeId})
+          )
     </select>
 
-    <select id="getByHeadquartersId" resultType="fun.cyhgraph.entity.Dish">
-        select * from dish where headquarters_id = #{headquartersId} and store_id is null order by id desc
-    </select>
-
-    <select id="getStandardByHeadquartersId" resultType="fun.cyhgraph.entity.Dish">
-        select * from dish where headquarters_id = #{headquartersId} and store_id is null order by id desc
+    <select id="getAllStandardDish" resultType="fun.cyhgraph.entity.Dish">
+        select * from dish
+        where dish_scope = 1 or (dish_scope is null and store_id is null)
+        order by id desc
     </select>
 
     <select id="getSpecialByStoreId" resultType="fun.cyhgraph.entity.Dish">
-        select * from dish where store_id = #{storeId} order by id desc
+        select * from dish
+        where store_id = #{storeId}
+          and (dish_scope = 2 or (dish_scope is null and store_id is not null))
+        order by id desc
     </select>
 
-    <select id="countByName" resultType="java.lang.Integer">
+    <select id="countByScopedName" resultType="java.lang.Integer">
         select count(id)
         from dish
         where name = #{name}
         <if test="excludeId != null">
             and id != #{excludeId}
+        </if>
+        <if test="dishScope != null">
+            and dish_scope = #{dishScope}
+        </if>
+        <if test="dishScope == 1">
+            and store_id is null
+        </if>
+        <if test="dishScope == 2">
+            and store_id = #{storeId}
         </if>
     </select>
 

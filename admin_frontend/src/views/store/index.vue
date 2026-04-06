@@ -2,15 +2,12 @@
 import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { addStoreAPI, getStoreListAPI, updateStoreAPI, updateStoreStatusAPI } from '@/api/store'
-import { getHeadquartersOptionsAPI } from '@/api/headquarters'
 import { getEmployeePageListAPI, getManagerOptionsAPI } from '@/api/employee'
 
 interface StoreItem {
   id: number
   name: string
-  headquartersId: number
   managerEmployeeId?: number
-  headquartersName?: string
   managerName?: string
   status: number
   createTime: string
@@ -23,7 +20,6 @@ interface ManagerOption {
 }
 
 const list = ref<StoreItem[]>([])
-const headquartersList = ref<{ id: number; name: string }[]>([])
 const managerList = ref<ManagerOption[]>([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
@@ -31,32 +27,11 @@ const formRef = ref()
 const form = reactive({
   id: 0,
   name: '',
-  headquartersId: undefined as number | undefined,
   managerEmployeeId: undefined as number | undefined,
 })
 const rules = {
   name: [{ required: true, message: '请输入分店名称', trigger: 'blur' }],
-  headquartersId: [{ required: true, message: '请选择所属总店', trigger: 'change' }],
   managerEmployeeId: [{ required: true, message: '请选择关联店长', trigger: 'change' }],
-}
-
-/**
- * 新增/编辑分店前先加载总店选项：
- * - 下拉框展示总店名称
- * - 提交时只提交 headquartersId，确保总店-分店层级关系正确
- */
-const loadHeadquartersOptions = async () => {
-  try {
-    const { data: res } = await getHeadquartersOptionsAPI()
-    if (res.code !== 0) {
-      headquartersList.value = []
-      return
-    }
-    headquartersList.value = res.data || []
-  } catch (error) {
-    headquartersList.value = []
-    ElMessage.error('加载总店列表失败，请稍后重试')
-  }
 }
 
 // 分店新增/编辑时，关联店长必须来自员工表中 role=1 的可用员工
@@ -107,26 +82,24 @@ const normalizeManagerValue = (value: string | number | undefined) => {
 const init = async () => {
   const { data: storeRes } = await getStoreListAPI()
   list.value = storeRes.data || []
-  await Promise.all([loadHeadquartersOptions(), loadManagerOptions()])
+  await loadManagerOptions()
 }
 
 const openAdd = async () => {
-  await Promise.all([loadHeadquartersOptions(), loadManagerOptions()])
+  await loadManagerOptions()
   isEdit.value = false
   form.id = 0
   form.name = ''
-  form.headquartersId = headquartersList.value[0]?.id
   form.managerEmployeeId = managerList.value[0]?.id
   dialogVisible.value = true
 }
 
 const openEdit = async (row: StoreItem) => {
   // 先拉取选项，再回显 value，避免 value 有值但 options 为空导致下拉空白
-  await Promise.all([loadHeadquartersOptions(), loadManagerOptions()])
+  await loadManagerOptions()
   isEdit.value = true
   form.id = row.id
   form.name = row.name
-  form.headquartersId = row.headquartersId
   form.managerEmployeeId = normalizeManagerValue(row.managerEmployeeId)
   dialogVisible.value = true
 }
@@ -161,7 +134,6 @@ init()
     </div>
     <el-table :data="list" stripe>
       <el-table-column prop="name" label="分店名称" align="center" />
-      <el-table-column prop="headquartersName" label="所属总店" align="center" />
       <el-table-column prop="managerName" label="当前店长" align="center" />
       <el-table-column prop="status" label="状态" align="center">
         <template #default="scope">
@@ -186,11 +158,6 @@ init()
     <el-form :model="form" :rules="rules" ref="formRef">
       <el-form-item label="分店名称" prop="name">
         <el-input v-model="form.name" />
-      </el-form-item>
-      <el-form-item label="所属总店" prop="headquartersId">
-        <el-select v-model="form.headquartersId" style="width: 100%">
-          <el-option v-for="item in headquartersList" :key="item.id" :label="item.name" :value="item.id" />
-        </el-select>
       </el-form-item>
       <el-form-item label="关联店长" prop="managerEmployeeId">
         <el-select v-model="form.managerEmployeeId" style="width: 100%" filterable>

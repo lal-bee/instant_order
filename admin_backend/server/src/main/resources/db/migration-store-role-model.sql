@@ -1,9 +1,10 @@
--- 总店-分店-员工权限模型增量迁移
+-- 门店-员工权限模型增量迁移（单总部模型）
 
--- 1) 新增总店表
-CREATE TABLE IF NOT EXISTS headquarters (
+-- 1) 新增分店表
+CREATE TABLE IF NOT EXISTS store (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(64) NOT NULL,
+    manager_employee_id INT NULL,
     status TINYINT NOT NULL DEFAULT 1,
     create_time DATETIME NOT NULL DEFAULT NOW(),
     update_time DATETIME NOT NULL DEFAULT NOW(),
@@ -11,21 +12,7 @@ CREATE TABLE IF NOT EXISTS headquarters (
     update_user INT NOT NULL
 );
 
--- 2) 新增分店表
-CREATE TABLE IF NOT EXISTS store (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    headquarters_id BIGINT NOT NULL,
-    name VARCHAR(64) NOT NULL,
-    manager_employee_id INT NULL,
-    status TINYINT NOT NULL DEFAULT 1,
-    create_time DATETIME NOT NULL DEFAULT NOW(),
-    update_time DATETIME NOT NULL DEFAULT NOW(),
-    create_user INT NOT NULL,
-    update_user INT NOT NULL,
-    CONSTRAINT fk_store_headquarters FOREIGN KEY (headquarters_id) REFERENCES headquarters(id) ON UPDATE CASCADE
-);
-
--- 3) employee 增加分店和角色字段（幂等）
+-- 2) employee 增加门店和角色字段（幂等）
 SET @exists_store_id := (
     SELECT COUNT(1) FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'employee' AND COLUMN_NAME = 'store_id'
@@ -43,21 +30,20 @@ SET @exists_role := (
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'employee' AND COLUMN_NAME = 'role'
 );
 SET @sql_role := IF(@exists_role = 0,
-    "ALTER TABLE employee ADD COLUMN role VARCHAR(32) NULL COMMENT '角色：CHAIRMAN/MANAGER/EMPLOYEE'",
+    "ALTER TABLE employee ADD COLUMN role TINYINT NULL COMMENT '角色：2董事长 1店长 0店员'",
     "SELECT 'skip add employee.role'"
 );
 PREPARE stmt FROM @sql_role;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 如果历史数据存在，先按默认值回填（请按实际业务调整默认 store_id）
-UPDATE employee SET role = 'EMPLOYEE' WHERE role IS NULL;
+UPDATE employee SET role = 0 WHERE role IS NULL;
 UPDATE employee SET store_id = 1 WHERE store_id IS NULL;
 
 ALTER TABLE employee MODIFY COLUMN store_id BIGINT NOT NULL COMMENT '所属分店ID';
-ALTER TABLE employee MODIFY COLUMN role VARCHAR(32) NOT NULL COMMENT '角色：CHAIRMAN/MANAGER/EMPLOYEE';
+ALTER TABLE employee MODIFY COLUMN role TINYINT NOT NULL COMMENT '角色：2董事长 1店长 0店员';
 
--- 4) 索引和约束（幂等）
+-- 3) 索引和约束（幂等）
 SET @exists_idx_store := (
     SELECT COUNT(1) FROM information_schema.STATISTICS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'employee' AND INDEX_NAME = 'idx_employee_store_id'
@@ -95,13 +81,13 @@ PREPARE stmt FROM @sql_fk_employee_store;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 5) 同一分店仅一个店长（MySQL 8+，幂等）
+-- 4) 同一分店仅一个店长（MySQL 8+，幂等）
 SET @exists_manager_flag := (
     SELECT COUNT(1) FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'employee' AND COLUMN_NAME = 'manager_flag'
 );
 SET @sql_manager_flag := IF(@exists_manager_flag = 0,
-    "ALTER TABLE employee ADD COLUMN manager_flag TINYINT GENERATED ALWAYS AS (CASE WHEN role = 'MANAGER' THEN 1 ELSE NULL END) VIRTUAL",
+    "ALTER TABLE employee ADD COLUMN manager_flag TINYINT GENERATED ALWAYS AS (CASE WHEN role = 1 THEN 1 ELSE NULL END) VIRTUAL",
     "SELECT 'skip add manager_flag'"
 );
 PREPARE stmt FROM @sql_manager_flag;
@@ -120,7 +106,7 @@ PREPARE stmt FROM @sql_uk_store_manager;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- 6) 分店负责人回填外键（可空，后续由业务回填，幂等）
+-- 5) 分店负责人外键（幂等）
 SET @exists_fk_store_manager := (
     SELECT COUNT(1) FROM information_schema.TABLE_CONSTRAINTS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'store'

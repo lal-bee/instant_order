@@ -24,93 +24,66 @@ export const layoutChildrenRoutes: RouteRecordRaw[] = [
     meta: { title: '订单管理', icon: 'Collection', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
   },
   {
+    path: 'category',
+    name: 'category',
+    component: () => import('./views/category/index.vue'),
+    meta: { title: '标准菜品分类管理', icon: 'Grid', roles: [RoleEnum.CHAIRMAN] },
+  },
+  {
     path: 'dish',
     name: 'dish',
-    component: () => import('./views/headquarters/dish.vue'),
-    meta: { title: '标准菜品管理', icon: 'Dish', roles: [RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
+    component: () => import('./views/dish/index.vue'),
+    meta: { title: '标准菜品管理', icon: 'Dish', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
   },
   {
     path: 'setmeal',
     name: 'setmeal',
-    component: () => import('./views/headquarters/setmeal.vue'),
-    meta: { title: '标准套餐管理', icon: 'User', roles: [RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
+    component: () => import('./views/setmeal/index.vue'),
+    meta: { title: '标准套餐管理', icon: 'User', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
   },
   {
-    path: 'headquarters',
-    name: 'headquarters',
-    component: () => import('./views/headquarters/index.vue'),
-    redirect: '/headquarters/list',
-    meta: { title: '总店管理', icon: 'OfficeBuilding', roles: [RoleEnum.CHAIRMAN] },
-    children: [
-      {
-        path: 'list',
-        name: 'headquarters_list',
-        component: () => import('./views/headquarters/list.vue'),
-        meta: { title: '总店列表', icon: 'OfficeBuilding', roles: [RoleEnum.CHAIRMAN] },
-      },
-      {
-        path: 'category',
-        name: 'headquarters_category',
-        component: () => import('./views/headquarters/category.vue'),
-        meta: { title: '标准菜品分类管理', icon: 'Grid', roles: [RoleEnum.CHAIRMAN] },
-      },
-      {
-        path: 'category/add',
-        name: 'headquarters_category_add',
-        component: () => import('./views/category/add.vue'),
-        meta: {
-          title: '新增分类',
-          roles: [RoleEnum.CHAIRMAN],
-          hidden: true,
-          activeMenu: '/headquarters/category',
-        },
-      },
-      {
-        path: 'category/update',
-        name: 'headquarters_category_update',
-        component: () => import('./views/category/update.vue'),
-        meta: {
-          title: '编辑分类',
-          roles: [RoleEnum.CHAIRMAN],
-          hidden: true,
-          activeMenu: '/headquarters/category',
-        },
-      },
-      {
-        path: 'dish',
-        name: 'headquarters_dish',
-        component: () => import('./views/headquarters/dish.vue'),
-        meta: { title: '标准菜品管理', icon: 'Dish', roles: [RoleEnum.CHAIRMAN] },
-      },
-      {
-        path: 'dish/add',
-        name: 'headquarters_dish_add',
-        component: () => import('./views/dish/add.vue'),
-        meta: {
-          title: '新增菜品',
-          roles: [RoleEnum.CHAIRMAN],
-          hidden: true,
-          activeMenu: '/headquarters/dish',
-        },
-      },
-      {
-        path: 'setmeal',
-        name: 'headquarters_setmeal',
-        component: () => import('./views/headquarters/setmeal.vue'),
-        meta: { title: '标准套餐管理', icon: 'User', roles: [RoleEnum.CHAIRMAN] },
-      },
-      {
-        path: 'setmeal/add',
-        name: 'headquarters_setmeal_add',
-        component: () => import('./views/setmeal/add.vue'),
-        meta: {
-          title: '新增套餐',
-          roles: [RoleEnum.CHAIRMAN],
-          hidden: true,
-          activeMenu: '/headquarters/setmeal',
-        },
-      },
-    ],
+    path: 'dish/add',
+    name: 'dish_add',
+    component: () => import('./views/dish/add.vue'),
+    meta: {
+      title: '新增菜品',
+      roles: [RoleEnum.CHAIRMAN],
+      hidden: true,
+      activeMenu: '/dish',
+    },
+  },
+  {
+    path: 'setmeal/add',
+    name: 'setmeal_add',
+    component: () => import('./views/setmeal/add.vue'),
+    meta: {
+      title: '新增套餐',
+      roles: [RoleEnum.CHAIRMAN],
+      hidden: true,
+      activeMenu: '/setmeal',
+    },
+  },
+  {
+    path: 'category/add',
+    name: 'category_add',
+    component: () => import('./views/category/add.vue'),
+    meta: {
+      title: '新增分类',
+      roles: [RoleEnum.CHAIRMAN],
+      hidden: true,
+      activeMenu: '/category',
+    },
+  },
+  {
+    path: 'category/update',
+    name: 'category_update',
+    component: () => import('./views/category/update.vue'),
+    meta: {
+      title: '编辑分类',
+      roles: [RoleEnum.CHAIRMAN],
+      hidden: true,
+      activeMenu: '/category',
+    },
   },
   {
     path: 'store',
@@ -142,12 +115,6 @@ export const layoutChildrenRoutes: RouteRecordRaw[] = [
     component: () => import('./views/employee/update.vue'),
     meta: { title: '修改员工', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE], hidden: true, activeMenu: '/employee' },
   },
-  // 兼容旧地址，统一跳转到总店模块下
-  { path: 'category', redirect: '/headquarters/category', meta: { hidden: true } },
-  { path: 'category/add', redirect: '/headquarters/category/add', meta: { hidden: true } },
-  { path: 'category/update', redirect: '/headquarters/category/update', meta: { hidden: true } },
-  { path: 'dish/add', redirect: '/headquarters/dish/add', meta: { hidden: true } },
-  { path: 'setmeal/add', redirect: '/headquarters/setmeal/add', meta: { hidden: true } },
 ]
 
 const routes: RouteRecordRaw[] = [

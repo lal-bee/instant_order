@@ -2,25 +2,19 @@ package fun.cyhgraph.service.serviceImpl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import fun.cyhgraph.constant.DishScopeConstant;
 import fun.cyhgraph.constant.MessageConstant;
 import fun.cyhgraph.constant.StatusConstant;
-import fun.cyhgraph.context.BaseContext;
 import fun.cyhgraph.dto.DishDTO;
 import fun.cyhgraph.dto.DishPageDTO;
 import fun.cyhgraph.entity.Dish;
 import fun.cyhgraph.entity.DishFlavor;
-import fun.cyhgraph.entity.Employee;
-import fun.cyhgraph.entity.Store;
 import fun.cyhgraph.exception.DeleteNotAllowedException;
-import fun.cyhgraph.exception.BaseException;
 import fun.cyhgraph.mapper.DishFlavorMapper;
 import fun.cyhgraph.mapper.DishMapper;
-import fun.cyhgraph.mapper.EmployeeMapper;
 import fun.cyhgraph.mapper.SetmealDishMapper;
-import fun.cyhgraph.mapper.StoreMapper;
 import fun.cyhgraph.result.PageResult;
 import fun.cyhgraph.service.DishService;
-import fun.cyhgraph.utils.RoleUtil;
 import fun.cyhgraph.vo.DishVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,21 +32,17 @@ public class DishServiceImpl implements DishService {
     private DishFlavorMapper dishFlavorMapper;
     @Autowired
     private SetmealDishMapper setmealDishMapper;
-    @Autowired
-    private EmployeeMapper employeeMapper;
-    @Autowired
-    private StoreMapper storeMapper;
-
     /**
      * 新增菜品
      * @param dishDTO
      */
     public void addDishWithFlavor(DishDTO dishDTO) {
-        dishDTO.setHeadquartersId(resolveHeadquartersId(dishDTO.getHeadquartersId()));
         // 不仅要向dish表添加数据，还要向dish_flavor表添加口味数据
         Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO, dish);
         dish.setStatus(1);
+        dish.setDishScope(DishScopeConstant.STANDARD);
+        dish.setStoreId(null);
         dishMapper.addDish(dish);
         System.out.println("新增dish成功！");
         // 由于在动态sql中，用了useGeneralKeys=true，因此会在插入数据后自动返回该行数据的主键id，
@@ -76,7 +66,6 @@ public class DishServiceImpl implements DishService {
      * @return
      */
     public PageResult getPageList(DishPageDTO dishPageDTO) {
-        dishPageDTO.setHeadquartersId(resolveHeadquartersId(dishPageDTO.getHeadquartersId()));
         PageHelper.startPage(dishPageDTO.getPage(), dishPageDTO.getPageSize());
         Page<Dish> dishList = dishMapper.getPageList(dishPageDTO);
         return new PageResult(dishList.getTotal(), dishList.getResult());
@@ -103,7 +92,6 @@ public class DishServiceImpl implements DishService {
      * @param dishDTO
      */
     public void updateDishWithFlavor(DishDTO dishDTO) {
-        dishDTO.setHeadquartersId(resolveHeadquartersId(dishDTO.getHeadquartersId()));
         Dish dish = new Dish();
         BeanUtils.copyProperties(dishDTO, dish);
         // 先根据id更新菜品数据
@@ -182,26 +170,6 @@ public class DishServiceImpl implements DishService {
             dishVOList.add(dishVO);
         }
         return dishVOList;
-    }
-
-    private Long resolveHeadquartersId(Long requestHeadquartersId) {
-        Integer currentEmployeeId = BaseContext.getCurrentId();
-        Employee current = employeeMapper.getById(currentEmployeeId);
-        if (current == null) {
-            throw new BaseException("当前登录员工不存在");
-        }
-        if (RoleUtil.isChairman(current.getRole())) {
-            // 董事长支持全局操作：未指定总部时不按总部过滤
-            return requestHeadquartersId;
-        }
-        if (current.getStoreId() == null) {
-            return requestHeadquartersId;
-        }
-        Store store = storeMapper.getById(current.getStoreId());
-        if (store == null) {
-            return requestHeadquartersId;
-        }
-        return store.getHeadquartersId();
     }
 
 }

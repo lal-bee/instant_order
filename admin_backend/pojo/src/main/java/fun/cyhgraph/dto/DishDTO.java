@@ -22,7 +22,6 @@ public class DishDTO implements Serializable {
     private BigDecimal price;
     private String status;
     private Integer categoryId;
-    private Long headquartersId;
     // 多种口味，包括温度，忌口等(每种口味又对应一个列表)，且数据在口味表中而不是在Dish里，口味表有外键关联Dish
     private List<DishFlavor> flavors = new ArrayList<>();
 

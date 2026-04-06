@@ -21,7 +21,8 @@ public class Dish implements Serializable {
     private Integer status;
     private Integer categoryId;
     private Long storeId;
-    private Long headquartersId;
+    private Integer dishScope;
+    private Integer standardDishId;
     private Integer createUser;
     private Integer updateUser;
     private LocalDateTime createTime;

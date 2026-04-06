@@ -77,7 +77,7 @@ const update_btn = (row: any) => {
   console.log('要修改的行数据')
   console.log(row)
   router.push({
-    name: 'headquarters_category_update',
+    name: 'category_update',
     query: {
       id: row.id
     }
@@ -138,7 +138,7 @@ const delete_btn = (row: any) => {
         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
       <el-button size="large" class="btn" round type="success" @click="init()">查询分类</el-button>
-      <el-button v-if="canOperate" size="large" class="btn" type="primary" @click="router.push('/headquarters/category/add')">
+      <el-button v-if="canOperate" size="large" class="btn" type="primary" @click="router.push('/category/add')">
         <el-icon style="font-size: 15px; margin-right: 10px;">
           <Plus />
         </el-icon>添加分类

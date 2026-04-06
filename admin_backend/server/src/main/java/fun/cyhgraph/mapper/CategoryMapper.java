@@ -13,8 +13,8 @@ import java.util.List;
 public interface CategoryMapper {
 
     @AutoFill(OperationType.INSERT)
-    @Insert("insert into category (headquarters_id, name, type, sort, status, create_user, update_user, create_time, update_time) VALUES " +
-            "(#{headquartersId}, #{name}, #{type}, #{sort}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})")
+    @Insert("insert into category (name, type, sort, status, create_user, update_user, create_time, update_time) VALUES " +
+            "(#{name}, #{type}, #{sort}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})")
     void add(Category category);
 
     Page<Category> getPageList(CategoryTypePageDTO categoryTypePageDTO);

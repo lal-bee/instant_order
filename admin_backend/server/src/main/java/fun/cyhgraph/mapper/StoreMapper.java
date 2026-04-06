@@ -16,15 +16,12 @@ import java.util.List;
 public interface StoreMapper {
 
     @AutoFill(OperationType.INSERT)
-    @Insert("insert into store (headquarters_id, name, manager_employee_id, status, create_user, update_user, create_time, update_time) values " +
-            "(#{headquartersId}, #{name}, #{managerEmployeeId}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})")
+    @Insert("insert into store (name, manager_employee_id, status, create_user, update_user, create_time, update_time) values " +
+            "(#{name}, #{managerEmployeeId}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})")
     void add(Store store);
 
     @Select("select * from store where id = #{id}")
     Store getById(Long id);
-
-    @Select("select * from store where headquarters_id = #{headquartersId} order by id asc")
-    List<Store> getByHeadquartersId(Long headquartersId);
 
     @Select("select * from store order by id asc")
     List<Store> getList();

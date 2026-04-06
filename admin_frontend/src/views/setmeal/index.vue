@@ -104,11 +104,11 @@ const to_add_update = (row?: any) => {
   console.log('看有没有传过来，来判断要add还是update', row)
   if (row && row.id) {
     router.push({
-      path: '/headquarters/setmeal/add',
+      path: '/setmeal/add',
       query: { id: row.id }
     })
   } else {
-    router.push('/headquarters/setmeal/add')
+    router.push('/setmeal/add')
   }
 }
 
