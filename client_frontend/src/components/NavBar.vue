@@ -32,7 +32,7 @@ const props = defineProps({
 
 const router = useRouter()
 const statusLocal = ref(true)
-const safeTop = ref('20px')
+const safeTop = ref('env(safe-area-inset-top, 0px)')
 
 const status = computed(() => props.status !== null && props.status !== undefined ? props.status : statusLocal.value)
 
@@ -55,8 +55,10 @@ function back() {
 .navbar-fixed {
   position: fixed;
   top: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
+  max-width: 480px;
   z-index: 999;
 }
 
@@ -65,13 +67,14 @@ function back() {
   background-size: cover;
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 12px 14px;
 }
 
 .logo-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .back {
@@ -87,18 +90,19 @@ function back() {
 
 .logo-text {
   color: #fff;
-  font-size: 14px;
-  padding-left: 12px;
+  font-size: 13px;
+  padding-left: 10px;
   border-left: 1px solid rgba(255,255,255,0.6);
+  white-space: nowrap;
 }
 
 .info {
-  margin: 8px 12px;
-  padding: 10px 14px;
+  margin: 8px 10px;
+  padding: 10px 12px;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
 }
 
@@ -120,16 +124,28 @@ function back() {
 
 .info2 {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 10px;
 }
 
-.address { color: #666; font-size: 13px; }
+.address {
+  color: #666;
+  font-size: 12px;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
 
 .phone-link {
   color: #10B981;
-  text-decoration: none;
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .blank {

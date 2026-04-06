@@ -54,14 +54,16 @@ async function handleMockLogin() {
 <style scoped>
 .page-login {
   min-height: 100vh;
-  background: #fff;
+  background: #f6f7f9;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 .viewport {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 20px 24px;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(20px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
 }
 
@@ -74,13 +76,14 @@ async function handleMockLogin() {
 }
 
 .logo img {
-  width: 120px;
-  height: 120px;
+  width: clamp(96px, 30vw, 128px);
+  height: clamp(96px, 30vw, 128px);
   display: block;
 }
 
 .login {
-  padding: 24px 0 80px;
+  padding: 24px 0 72px;
+  position: relative;
 }
 
 .button {
@@ -98,8 +101,8 @@ async function handleMockLogin() {
 }
 
 .extra {
-  margin-top: 48px;
-  padding-top: 24px;
+  margin-top: 36px;
+  padding-top: 20px;
   border-top: 1px solid #e5e7eb;
 }
 
@@ -125,9 +128,9 @@ async function handleMockLogin() {
 
 .tips {
   position: absolute;
-  bottom: 32px;
-  left: 20px;
-  right: 20px;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  right: 0;
   font-size: 12px;
   color: #999;
   text-align: center;

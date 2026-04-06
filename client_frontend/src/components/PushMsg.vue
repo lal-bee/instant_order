@@ -40,11 +40,12 @@ defineExpose({ openPopup, closePopup })
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  padding: 16px;
 }
 .push-msg-pop {
   background: #fff;
   border-radius: 12px;
-  width: 280px;
+  width: min(100%, 320px);
   padding: 24px 20px;
   text-align: center;
 }

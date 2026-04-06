@@ -207,21 +207,25 @@ onMounted(() => {
 <style scoped>
 .page-my {
   min-height: 100vh;
-  padding-top: 52px;
-  padding-bottom: 24px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-top: calc(52px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   background: #f8f8f8;
 }
 
 .detail-header {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  height: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: calc(44px + env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  padding: env(safe-area-inset-top, 0px) 12px 0;
   background: #fff;
   border-bottom: 1px solid #eee;
   z-index: 100;
@@ -235,7 +239,7 @@ onMounted(() => {
 .my-info {
   display: flex;
   align-items: center;
-  padding: 24px 20px;
+  padding: 20px 16px;
   background: linear-gradient(180deg, #cceeff 0%, #e6f7ff 100%);
 }
 .head {
@@ -259,6 +263,15 @@ onMounted(() => {
   font-weight: 600;
   color: #333;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
 }
 .gender-tag {
   font-size: 12px;
@@ -336,7 +349,9 @@ onMounted(() => {
   gap: 8px;
   margin-bottom: 8px;
   overflow-x: auto;
+  scrollbar-width: none;
 }
+.dish-scroll::-webkit-scrollbar { display: none; }
 .dish-thumb {
   width: 50px;
   height: 50px;

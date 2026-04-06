@@ -99,21 +99,25 @@ onMounted(() => {
 <style scoped>
 .page-pay {
   min-height: 100vh;
-  padding-top: 52px;
-  padding-bottom: 100px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-top: calc(52px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
   background: #f5f5f5;
 }
 
 .detail-header {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  height: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: calc(44px + env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  padding: env(safe-area-inset-top, 0px) 12px 0;
   background: #fff;
   border-bottom: 1px solid #eee;
   z-index: 100;
@@ -121,6 +125,7 @@ onMounted(() => {
 .detail-header .back {
   position: absolute;
   left: 12px;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
   width: 24px;
   height: 24px;
   cursor: pointer;
@@ -161,9 +166,11 @@ onMounted(() => {
 .footer {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  padding: 12px 14px calc(10px + env(safe-area-inset-bottom, 0px));
   background: #fff;
   border-top: 1px solid #eee;
   z-index: 100;

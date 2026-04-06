@@ -59,16 +59,17 @@ function toOrderPage() {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  padding: 20px 12px 40px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 14px calc(28px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
 }
 
 /* 轮播：H5 用 div+transform 替代 uni swiper */
 .swiper-wrap {
   width: 100%;
-  max-width: 400px;
-  height: calc(100vw * 320 / 750);
-  max-height: 200px;
+  max-width: 452px;
+  height: clamp(150px, 44vw, 210px);
   overflow: hidden;
   position: relative;
   border-radius: 8px;
@@ -121,6 +122,7 @@ function toOrderPage() {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 .home-img {
@@ -132,10 +134,10 @@ function toOrderPage() {
 
 .btn-order {
   margin-top: 20px;
-  width: 200px;
-  height: 48px;
+  width: min(100%, 320px);
+  height: 46px;
   border: none;
-  border-radius: 8px;
+  border-radius: 23px;
   font-size: 16px;
   color: #fff;
   background: #10B981;

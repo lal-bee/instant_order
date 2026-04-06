@@ -34,11 +34,13 @@ function goOrder() {
 <style scoped>
 .page-order-success {
   min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 24px;
+  padding: calc(36px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
   background: #fff;
 }
 
@@ -77,7 +79,7 @@ function goOrder() {
   display: flex;
   gap: 16px;
   width: 100%;
-  max-width: 320px;
+  max-width: 360px;
 }
 
 .btn {

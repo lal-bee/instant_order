@@ -292,20 +292,25 @@ onMounted(async () => {
 <style scoped>
 .page-dish-detail {
   min-height: 100vh;
-  padding-bottom: 100px;
-  padding-top: 52px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  padding-top: calc(52px + env(safe-area-inset-top, 0px));
+  background: #fff;
 }
 
 .detail-header {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  height: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: calc(44px + env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  padding: env(safe-area-inset-top, 0px) 12px 0;
   background: #fff;
   border-bottom: 1px solid #eee;
   z-index: 100;
@@ -313,6 +318,7 @@ onMounted(async () => {
 .detail-header .back {
   position: absolute;
   left: 12px;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
   width: 24px;
   height: 24px;
   cursor: pointer;
@@ -431,6 +437,7 @@ onMounted(async () => {
   inset: 0;
   z-index: 1000;
   background: rgba(0,0,0,0.6);
+  padding: 16px;
 }
 
 .flavor_pop {
@@ -438,15 +445,18 @@ onMounted(async () => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 70%;
-  max-height: 40vh;
-  padding: 20px;
+  width: min(100%, 360px);
+  max-height: min(70vh, 520px);
+  padding: 16px;
   border-radius: 12px;
   background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .flavor_pop .title { font-size: 16px; font-weight: bold; margin-bottom: 12px; }
-.scroll { max-height: 28vh; overflow-y: auto; }
+.scroll { max-height: min(48vh, 360px); overflow-y: auto; }
 .flavor { padding: 8px 0; }
 .flavor-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .flavorItem {
@@ -459,18 +469,19 @@ onMounted(async () => {
 .flavorItem.active { background: #10B981; color: #fff; }
 .addToCart {
   margin-top: 12px;
-  padding: 10px 20px;
+  min-height: 42px;
+  width: 100%;
+  padding: 0 16px;
   background: #10B981;
   color: #fff;
   border: none;
-  border-radius: 20px;
+  border-radius: 21px;
   font-size: 14px;
   cursor: pointer;
-  float: right;
 }
 .close_dialog {
   position: absolute;
-  top: 75%;
+  top: calc(50% + min(36vh, 240px));
   left: 50%;
   transform: translateX(-50%);
   width: 36px;
@@ -486,9 +497,11 @@ onMounted(async () => {
 
 .footer_order_buttom {
   position: fixed;
-  bottom: 24px;
-  left: 16px;
-  right: 16px;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 456px;
   height: 52px;
   display: flex;
   align-items: center;
@@ -518,7 +531,7 @@ onMounted(async () => {
 .order_price { flex: 1; color: #fff; font-size: 18px; padding-left: 12px; }
 .order_price .ico { font-size: 14px; }
 .order_btn {
-  width: 100px;
+  width: 96px;
   height: 36px;
   line-height: 36px;
   border-radius: 18px;
@@ -529,7 +542,7 @@ onMounted(async () => {
   border: none;
 }
 .order_btn_active {
-  width: 100px;
+  width: 96px;
   height: 36px;
   line-height: 36px;
   border-radius: 18px;
@@ -545,12 +558,14 @@ onMounted(async () => {
 .cart_pop {
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
   max-height: 60vh;
   background: #fff;
   border-radius: 16px 16px 0 0;
-  padding: 16px;
+  padding: 14px 12px calc(10px + env(safe-area-inset-bottom, 0px));
   overflow: hidden;
   display: flex;
   flex-direction: column;
