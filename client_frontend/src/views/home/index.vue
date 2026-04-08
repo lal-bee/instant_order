@@ -18,6 +18,10 @@
       </div>
     </div>
     <div class="home-section">
+      <div v-if="tableContext.storeName || tableContext.tableNo" class="table-context">
+        <div class="ctx-line"><span class="ctx-label">当前门店：</span>{{ tableContext.storeName || '-' }}</div>
+        <div class="ctx-line"><span class="ctx-label">当前桌号：</span>{{ tableContext.tableNo || '-' }}</div>
+      </div>
       <img class="home-img" src="/images/home.png" alt="点餐" />
       <button class="btn-order" type="button" @click="toOrderPage">点击开始点餐</button>
     </div>
@@ -25,18 +29,31 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getStoreId, getTableId } from '@/utils/url'
+import { getTableInfoAPI } from '@/api/table'
+import { showToast } from '@/utils/toast'
+import { getTableId, getStoreId, getStoreName, getTableNo, persistTableContext } from '@/utils/url'
 
 const router = useRouter()
 const currentSlide = ref(0)
+const tableContext = reactive({
+  tableId: '',
+  storeId: '',
+  storeName: '',
+  tableNo: '',
+})
 let timer = null
 
 onMounted(() => {
   timer = setInterval(() => {
     currentSlide.value = (currentSlide.value + 1) % 3
   }, 2000)
+  tableContext.tableId = getTableId()
+  tableContext.storeId = getStoreId()
+  tableContext.storeName = getStoreName()
+  tableContext.tableNo = getTableNo()
+  initTableContext()
 })
 
 onUnmounted(() => {
@@ -45,11 +62,28 @@ onUnmounted(() => {
 
 function toOrderPage() {
   const query = {}
-  const storeId = getStoreId()
-  const tableId = getTableId()
-  if (storeId) query.storeId = storeId
-  if (tableId) query.tableId = tableId
+  if (tableContext.tableId) query.tableId = tableContext.tableId
   router.push({ path: '/order', query })
+}
+
+async function initTableContext() {
+  const token = localStorage.getItem('token')
+  const tableId = getTableId()
+  if (!tableId || !token) return
+  try {
+    const res = await getTableInfoAPI(tableId)
+    const data = res.data || {}
+    persistTableContext(data)
+    tableContext.tableId = String(data.tableId || tableId)
+    tableContext.storeId = String(data.storeId || '')
+    tableContext.storeName = data.storeName || ''
+    tableContext.tableNo = data.tableNo || ''
+  } catch (e) {
+    tableContext.storeId = ''
+    tableContext.storeName = ''
+    tableContext.tableNo = ''
+    showToast(e?.message || '二维码无效或餐桌不可用')
+  }
 }
 </script>
 
@@ -123,6 +157,25 @@ function toOrderPage() {
   flex-direction: column;
   align-items: center;
   width: 100%;
+}
+
+.table-context {
+  width: min(100%, 360px);
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #10B981;
+  color: #065f46;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.ctx-line + .ctx-line {
+  margin-top: 4px;
+}
+
+.ctx-label {
+  font-weight: 600;
 }
 
 .home-img {

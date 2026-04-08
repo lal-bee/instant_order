@@ -1,7 +1,10 @@
 <template>
   <div class="page-pay">
     <header class="detail-header">
-      <img class="back" src="/icon/back.png" alt="返回" @click="goBack" />
+      <button class="back-btn" type="button" @click="goBack" aria-label="返回">
+        <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
+        <span v-else class="back-fallback">‹</span>
+      </button>
       <span class="title">支付确认</span>
     </header>
 
@@ -47,6 +50,7 @@ const route = useRoute()
 const order = ref(null)
 const loading = ref(true)
 const paying = ref(false)
+const backIconError = ref(false)
 
 const orderAmount = computed(() => {
   if (!order.value || order.value.amount == null) return '0.00'
@@ -122,13 +126,29 @@ onMounted(() => {
   border-bottom: 1px solid #eee;
   z-index: 100;
 }
-.detail-header .back {
+.detail-header .back-btn {
   position: absolute;
   left: 12px;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   width: 24px;
   height: 24px;
-  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-header .back {
+  width: 18px;
+  height: 18px;
+}
+.detail-header .back-fallback {
+  font-size: 20px;
+  line-height: 1;
+  color: #111827;
+  transform: translateY(-1px);
 }
 .detail-header .title {
   font-size: 16px;

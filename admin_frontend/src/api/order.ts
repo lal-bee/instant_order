@@ -17,7 +17,7 @@ export const queryOrderDetailByIdAPI = (params: any) => {
   })
 }
 
-// 派送接口
+// 出餐接口
 export const deliveryOrderAPI = (params: any) => {
   return request({
     url: `/order/delivery/${params.id}`,
@@ -42,9 +42,9 @@ export const orderCancelAPI = (params: any) => {
   })
 }
 
-// 接单
+// 开始制作
 export const orderAcceptAPI = (params: any) => {
-  console.log('接单params', params)
+  console.log('开始制作params', params)
   return request({
     url: '/order/confirm',
     method: 'put',
@@ -61,7 +61,7 @@ export const orderRejectAPI = (params: any) => {
   })
 }
 
-// 获取待处理，待派送，派送中数量
+// 获取待制作、制作中、待取餐数量
 export const getOrderListByAPI = () => {
   return request({
     url: '/order/statistics',

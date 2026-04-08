@@ -3,6 +3,7 @@ package fun.cyhgraph.controller.user;
 import fun.cyhgraph.constant.JwtClaimsConstant;
 import fun.cyhgraph.dto.UserDTO;
 import fun.cyhgraph.dto.UserLoginDTO;
+import fun.cyhgraph.dto.UserRegisterDTO;
 import fun.cyhgraph.entity.User;
 import fun.cyhgraph.properties.JwtProperties;
 import fun.cyhgraph.result.Result;
@@ -26,10 +27,17 @@ public class UserController {
     @Autowired
     private JwtProperties jwtProperties;
 
+    @PostMapping("/register")
+    public Result<Void> register(@RequestBody UserRegisterDTO userRegisterDTO) {
+        log.info("用户注册信息：{}", userRegisterDTO.getUsername());
+        userService.register(userRegisterDTO);
+        return Result.success();
+    }
+
     @PostMapping("/login")
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO){
         log.info("用户传过来的登录信息：{}", userLoginDTO);
-        User user = userService.wxLogin(userLoginDTO);
+        User user = userService.login(userLoginDTO);
 
         // 上面的没抛异常，正常来到这里，说明登录成功
         // claims就是用户数据payload部分
@@ -42,7 +50,8 @@ public class UserController {
                 claims);
         UserLoginVO userLoginVO = UserLoginVO.builder()
                 .id(user.getId())
-                .openid(user.getOpenid())
+                .username(user.getUsername())
+                .name(user.getName())
                 .token(token)
                 .build();
         return Result.success(userLoginVO);

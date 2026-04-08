@@ -15,12 +15,16 @@ import java.time.LocalDateTime;
 public class User implements Serializable {
 
     private Integer id;
+    private String username;
+    private String password;
     private String name;
     private String openid;
     private String phone;
     private Integer gender;
     private String idNumber;
     private String pic;
+    private Integer status;
     private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 
 }

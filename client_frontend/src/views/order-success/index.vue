@@ -2,7 +2,7 @@
   <div class="page-order-success">
     <div class="success-icon">✓</div>
     <h1 class="title">支付成功</h1>
-    <p class="desc">您的订单已提交，请等待商家接单</p>
+    <p class="desc">您的订单已提交，商家正在处理</p>
     <div v-if="orderNumber || orderId" class="order-id">订单号：{{ orderNumber || orderId }}</div>
 
     <div class="actions">

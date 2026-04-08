@@ -1,7 +1,10 @@
 <template>
   <div class="page-order-detail">
     <header class="detail-header">
-      <img class="back" src="/icon/back.png" alt="返回" @click="goBack" />
+      <button class="back-btn" type="button" @click="goBack" aria-label="返回">
+        <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
+        <span v-else class="back-fallback">‹</span>
+      </button>
       <span class="title">订单详情</span>
     </header>
 
@@ -61,14 +64,6 @@
             </div>
           </div>
         </div>
-        <div class="row">
-          <span class="row-left">打包费</span>
-          <span class="row-right">￥{{ order.packAmount ?? 0 }}</span>
-        </div>
-        <div class="row">
-          <span class="row-left">配送费</span>
-          <span class="row-right">￥6</span>
-        </div>
         <div class="row total-row">
           <span class="row-right">总价 ￥{{ order.amount }}</span>
         </div>
@@ -102,7 +97,7 @@
           <span class="row-right">{{ order.orderTime }}</span>
         </div>
         <div class="row">
-          <span class="row-left">地址</span>
+          <span class="row-left">就餐信息</span>
           <span class="row-right">{{ order.address || '-' }}</span>
         </div>
       </div>
@@ -127,13 +122,14 @@ const route = useRoute()
 const order = ref({})
 const loading = ref(true)
 const pushMsgRef = ref(null)
+const backIconError = ref(false)
 
 const statusList = [
   { name: '全部订单' },
   { name: '等待支付' },
-  { name: '等待商家接单' },
-  { name: '商家已接单' },
-  { name: '正在派送中' },
+  { name: '已支付（待制作）' },
+  { name: '制作中' },
+  { name: '待取餐' },
   { name: '订单已完成' },
   { name: '订单已取消' },
 ]
@@ -205,7 +201,7 @@ async function cancelOrder() {
     showToast('订单已取消')
     await loadOrder()
   } catch (e) {
-    showToast('取消失败或商家已接单，请联系商家')
+    showToast('取消失败，订单状态已变更，请联系商家')
     await loadOrder()
   }
 }
@@ -280,13 +276,29 @@ onMounted(() => {
   border-bottom: 1px solid #eee;
   z-index: 100;
 }
-.detail-header .back {
+.detail-header .back-btn {
   position: absolute;
   left: 12px;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   width: 24px;
   height: 24px;
-  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-header .back {
+  width: 18px;
+  height: 18px;
+}
+.detail-header .back-fallback {
+  font-size: 20px;
+  line-height: 1;
+  color: #111827;
+  transform: translateY(-1px);
 }
 .detail-header .title {
   font-size: 16px;

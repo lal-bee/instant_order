@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fun.cyhgraph.mapper.TableInfoMapper">
+
+    <select id="getUserTableById" resultType="fun.cyhgraph.vo.UserTableVO">
+        select ti.id as tableId,
+               ti.store_id as storeId,
+               s.name as storeName,
+               ti.table_no as tableNo
+        from table_info ti
+                 left join store s on s.id = ti.store_id
+        where ti.id = #{tableId}
+          and ti.status = 1
+        limit 1
+    </select>
+
+</mapper>

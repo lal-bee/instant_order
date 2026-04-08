@@ -24,6 +24,7 @@ public interface SetmealService {
     void deleteBatch(List<Integer> ids);
 
     List<Setmeal> getList(Integer categoryId);
+    List<Setmeal> getListByStoreId(Long storeId, Integer categoryId);
 
     List<DishItemVO> getSetmealDishesById(Integer id);
 

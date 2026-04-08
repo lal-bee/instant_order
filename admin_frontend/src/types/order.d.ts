@@ -10,9 +10,8 @@ export type OrderSubmitVO = Partial<{
 export type Order = {
   id: number // 订单id
   number: string // 订单号
-  status: number // 订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+  status: number // 订单状态 1待付款 2已支付(待制作) 3制作中 4待取餐 5已完成 6已取消
   userId: number // 下单用户id
-  addressBookId: number // 地址id
   orderTime: Date // 下单时间
   checkoutTime: Date // 结账时间
   payMethod: number // 支付方式 1微信，2支付宝
@@ -21,17 +20,17 @@ export type Order = {
   remark: string // 备注
   userName: string // 用户名
   phone: string // 手机号
-  address: string // 地址
-  consignee: string // 收货人
+  address: string // 就餐信息
+  consignee: string // 用户昵称
   cancelReason: string // 订单取消原因
   rejectionReason: string // 订单拒绝原因
   cancelTime: Date // 订单取消时间
-  estimatedDeliveryTime: Date // 预计送达时间
-  deliveryStatus: number // 配送状态  1立即送出  0选择具体时间
-  deliveryTime: Date // 送达时间
-  packAmount: number // 打包费
   tablewareNumber: number // 餐具数量
   tablewareStatus: number // 餐具数量状态  1按餐量提供  0选择具体数量
+  storeId: number // 门店id
+  storeName: string // 门店名称
+  tableId: number // 餐桌id
+  tableNo: string // 桌号
 }
 
 // 订单详细菜品信息

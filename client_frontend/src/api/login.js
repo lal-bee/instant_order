@@ -1,12 +1,23 @@
 import request from './request'
 
 /**
- * 用户登录，body: { code }（H5 可用模拟 code，由后端兼容返回 token）
+ * 用户登录
  */
-export function loginAPI(code) {
+export function loginAPI(data) {
   return request({
     method: 'POST',
     url: '/user/user/login',
-    data: { code },
+    data,
+  })
+}
+
+/**
+ * 用户注册
+ */
+export function registerAPI(data) {
+  return request({
+    method: 'POST',
+    url: '/user/user/register',
+    data,
   })
 }

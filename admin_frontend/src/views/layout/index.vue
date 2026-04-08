@@ -234,9 +234,9 @@ const webSocket = () => {
       }
       // 右上角弹窗提示
       ElNotification({
-        title: jsonMsg.type === 1 ? '待接单' : '催单',
+        title: jsonMsg.type === 1 ? '待制作' : '催单',
         message: jsonMsg.type === 1
-          ? `<span>您有1个<span style="color:#419EFF">订单待处理</span>,${jsonMsg.content},请及时接单</span>`
+          ? `<span>您有1个<span style="color:#419EFF">订单待处理</span>,${jsonMsg.content},请及时制作</span>`
           : `${jsonMsg.content}<span style='color:#419EFF;cursor: pointer'>去处理</span>`,
         duration: 0,
         dangerouslyUseHTMLString: true,

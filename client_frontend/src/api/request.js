@@ -45,6 +45,10 @@ request.interceptors.response.use(
         localStorage.removeItem('profile')
       } catch (e) {}
       showToast('请先登录')
+      const current = window.location.pathname + (window.location.search || '')
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.replace(`/login?redirect=${encodeURIComponent(current)}`)
+      }
       return Promise.reject(err)
     }
     let msg = '网络异常，请重试'

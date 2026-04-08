@@ -2,7 +2,10 @@
   <div class="page-dish-detail">
     <!-- 顶部栏：返回 + 标题 -->
     <header class="detail-header">
-      <img class="back" src="/icon/back.png" alt="返回" @click="goBack" />
+      <button class="back-btn" type="button" @click="goBack" aria-label="返回">
+        <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
+        <span v-else class="back-fallback">‹</span>
+      </button>
       <span class="title">{{ pageTitle }}</span>
     </header>
 
@@ -87,7 +90,7 @@
     <div class="footer_order_buttom" v-if="cartList.length === 0">
       <div class="order_number"><img src="/images/cart_empty.png" class="order_number_icon" alt="" /></div>
       <div class="order_price"><span class="ico">￥</span> 0</div>
-      <div class="order_btn">￥0起送</div>
+      <div class="order_btn">未选商品</div>
     </div>
     <div class="footer_order_buttom" v-else @click="openCartList = !openCartList">
       <div class="order_number">
@@ -146,6 +149,7 @@ const visible = ref(false)
 const dialogDish = ref(null)
 const flavors = ref([])
 const chosedflavors = ref([])
+const backIconError = ref(false)
 
 const CartAllNumber = computed(() => cartList.value.reduce((acc, cur) => acc + cur.number, 0))
 const CartAllPrice = computed(() => cartList.value.reduce((acc, cur) => acc + cur.amount * cur.number, 0))
@@ -315,13 +319,29 @@ onMounted(async () => {
   border-bottom: 1px solid #eee;
   z-index: 100;
 }
-.detail-header .back {
+.detail-header .back-btn {
   position: absolute;
   left: 12px;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   width: 24px;
   height: 24px;
-  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-header .back {
+  width: 18px;
+  height: 18px;
+}
+.detail-header .back-fallback {
+  font-size: 20px;
+  line-height: 1;
+  color: #111827;
+  transform: translateY(-1px);
 }
 .detail-header .title {
   font-size: 16px;

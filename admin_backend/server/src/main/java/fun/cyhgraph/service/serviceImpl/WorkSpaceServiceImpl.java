@@ -82,15 +82,15 @@ public class WorkSpaceServiceImpl implements WorkSpaceService {
      */
     public OrderOverViewVO getOrderOverView() {
         /**
-         * 全部订单 待接单 待派送 已完成 已取消
+         * 全部订单 待制作 制作中 已完成 已取消
          */
         Map map = new HashMap();
         map.put("begin", LocalDateTime.now().with(LocalTime.MIN));
         Integer allOrders = orderMapper.countByMap(map);
 
-        map.put("status", Order.TO_BE_CONFIRMED);
+        map.put("status", Order.TO_BE_PREPARED);
         Integer toConfirmed = orderMapper.countByMap(map);
-        map.put("status", Order.CONFIRMED);
+        map.put("status", Order.PREPARING);
         Integer toDelivery = orderMapper.countByMap(map);
         map.put("status", Order.COMPLETED);
         Integer completed = orderMapper.countByMap(map);

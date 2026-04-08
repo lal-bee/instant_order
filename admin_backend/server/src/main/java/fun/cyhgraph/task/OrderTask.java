@@ -43,15 +43,15 @@ public class OrderTask {
     }
 
     /**
-     * 处理“派送中”状态的订单
+     * 处理“待取餐”状态的订单，超时自动完成
      */
     @Scheduled(cron = "0 0 1 * * ?") // 表示每次1:00:00触发
     public void processDeliveryOrder(){
-        log.info("处理派送中订单：{}", new Date());
-        // 每日凌晨1点，查询正在派送中并且下单时间超过1小时的所有订单
+        log.info("处理待取餐订单：{}", new Date());
+        // 每日凌晨1点，查询待取餐并且下单时间超过1小时的所有订单
         // select * from orders where status = 4 and order_time < 当前时间-1小时
         LocalDateTime time = LocalDateTime.now().plusMinutes(-60);
-        List<Order> ordersList = orderMapper.getByStatusAndOrderTimeLT(Order.DELIVERY_IN_PROGRESS, time);
+        List<Order> ordersList = orderMapper.getByStatusAndOrderTimeLT(Order.READY_FOR_PICKUP, time);
         // 将其状态都改为已完成
         if(ordersList != null && !ordersList.isEmpty()){
             ordersList.forEach(order -> {

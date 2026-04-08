@@ -36,9 +36,6 @@ public class GlobalExceptionHandler {
             return Result.error(value + MessageConstant.ALREADY_EXiST);
         }
         if (message != null && message.contains("cannot be null")) {
-            if (message.contains("address_book_id")) {
-                return Result.error("订单表 address_book_id 不允许为 null，请执行迁移: ALTER TABLE orders MODIFY COLUMN address_book_id bigint DEFAULT NULL;");
-            }
             return Result.error("数据约束错误: " + message);
         }
         return Result.error(MessageConstant.UNKNOWN_ERROR);
@@ -54,9 +51,6 @@ public class GlobalExceptionHandler {
             return Result.error(username + MessageConstant.ALREADY_EXiST);
         }
         if (message != null && message.contains("cannot be null")) {
-            if (message.contains("address_book_id")) {
-                return Result.error("订单表 address_book_id 需允许 NULL，请执行: ALTER TABLE orders MODIFY COLUMN address_book_id bigint DEFAULT NULL;");
-            }
             return Result.error("数据约束: " + message);
         }
         return Result.error(MessageConstant.UNKNOWN_ERROR);

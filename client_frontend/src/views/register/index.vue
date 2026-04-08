@@ -1,85 +1,73 @@
 <template>
-  <div class="page-login">
+  <div class="page-register">
     <div class="viewport">
-      <div class="logo">
-        <img src="/images/login.png" alt="扫码点餐" />
-      </div>
-      <div class="login-card">
-        <h2 class="title">账号登录</h2>
+      <div class="card">
+        <h2 class="title">账号注册</h2>
         <input v-model.trim="form.username" class="input" type="text" maxlength="50" placeholder="请输入用户名" />
         <input v-model="form.password" class="input" type="password" maxlength="50" placeholder="请输入密码" />
-        <button class="button" type="button" :disabled="loading" @click="handleLogin">
-          {{ loading ? '登录中...' : '登录' }}
+        <input v-model="form.confirmPassword" class="input" type="password" maxlength="50" placeholder="请再次输入密码" />
+        <input v-model.trim="form.nickname" class="input" type="text" maxlength="50" placeholder="昵称（可选）" />
+        <button class="button" type="button" :disabled="loading" @click="handleRegister">
+          {{ loading ? '注册中...' : '注册' }}
         </button>
         <div class="link-row">
-          <span>还没有账号？</span>
-          <span class="link" @click="goRegister">去注册</span>
+          <span>已有账号？</span>
+          <span class="link" @click="goLogin">去登录</span>
         </div>
-        <div class="tips">登录即视为同意《服务条款》和《隐私协议》</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { loginAPI } from '@/api/login'
+import { registerAPI } from '@/api/login'
 import { showToast } from '@/utils/toast'
 
 const router = useRouter()
 const route = useRoute()
-const userStore = useUserStore()
 const loading = ref(false)
 const form = reactive({
   username: '',
   password: '',
+  confirmPassword: '',
+  nickname: '',
 })
 
-onMounted(() => {
-  const q = route.query.username
-  if (typeof q === 'string') form.username = q
-})
-
-async function handleLogin() {
+async function handleRegister() {
   if (!form.username) return showToast('请输入用户名')
   if (!form.password) return showToast('请输入密码')
+  if (!form.confirmPassword) return showToast('请确认密码')
+  if (form.password !== form.confirmPassword) return showToast('两次密码不一致')
   loading.value = true
   try {
-    const res = await loginAPI({
+    await registerAPI({
       username: form.username,
       password: form.password,
+      confirmPassword: form.confirmPassword,
+      nickname: form.nickname,
     })
-    const profile = res.data
-    if (profile && profile.token) {
-      userStore.setProfile(profile)
-      showToast('登录成功')
-      const redirect = route.query.redirect
-      if (redirect && typeof redirect === 'string' && redirect.startsWith('/')) {
-        router.replace(redirect)
-      } else {
-        router.replace('/my')
-      }
-    } else {
-      showToast('登录失败')
-    }
+    showToast('注册成功，请登录')
+    const query = { username: form.username }
+    if (route.query.redirect) query.redirect = route.query.redirect
+    router.replace({ path: '/login', query })
   } catch (e) {
-    showToast(e?.message || '登录失败')
+    showToast(e?.message || '注册失败')
   } finally {
     loading.value = false
   }
 }
 
-function goRegister() {
+function goLogin() {
   const query = {}
   if (route.query.redirect) query.redirect = route.query.redirect
-  router.push({ path: '/register', query })
+  router.replace({ path: '/login', query })
 }
 </script>
 
 <style scoped>
-.page-login {
+.page-register {
   min-height: 100vh;
   background: #f6f7f9;
   max-width: 480px;
@@ -87,28 +75,16 @@ function goRegister() {
 }
 
 .viewport {
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
-  padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(20px + env(safe-area-inset-bottom, 0px));
-  box-sizing: border-box;
-}
-
-.logo {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 10vh;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
-.logo img {
-  width: clamp(96px, 30vw, 128px);
-  height: clamp(96px, 30vw, 128px);
-  display: block;
-}
-
-.login-card {
+.card {
+  width: 100%;
   background: #fff;
   border-radius: 12px;
   padding: 20px 16px;
@@ -155,12 +131,5 @@ function goRegister() {
 .link {
   color: #10B981;
   margin-left: 4px;
-}
-
-.tips {
-  margin-top: 14px;
-  font-size: 12px;
-  color: #999;
-  text-align: center;
 }
 </style>

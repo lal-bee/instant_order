@@ -1,6 +1,10 @@
 <template>
   <div class="page-order">
     <NavBar :status="status" />
+    <div class="table-context" v-if="tableContext.storeName || tableContext.tableNo">
+      <span>当前门店：{{ tableContext.storeName || '-' }}</span>
+      <span>当前桌号：{{ tableContext.tableNo || '-' }}</span>
+    </div>
     <div class="viewport">
       <!-- 未登录或无数据时提示 -->
       <div v-if="categoryList.length === 0" class="empty-tip">
@@ -87,7 +91,7 @@
         <img src="/images/cart_empty.png" class="order_number_icon" alt="" />
       </div>
       <div class="order_price"><span class="ico">￥</span> 0</div>
-      <div class="order_btn">￥0起送</div>
+      <div class="order_btn">未选商品</div>
     </div>
     <!-- 底部购物车栏：有商品 -->
     <div class="footer_order_buttom" v-else @click="openCartList = !openCartList">
@@ -145,15 +149,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import NavBar from '@/components/NavBar.vue'
 import { getStatusAPI } from '@/api/shop'
 import { getCategoryAPI } from '@/api/category'
 import { getDishListAPI } from '@/api/dish'
 import { getSetmealListAPI } from '@/api/setmeal'
+import { getTableInfoAPI } from '@/api/table'
 import { addToCartAPI, subCartAPI, getCartAPI, cleanCartAPI } from '@/api/cart'
 import { showToast } from '@/utils/toast'
+import { getTableId, getStoreId, getStoreName, getTableNo, persistTableContext } from '@/utils/url'
 
 const router = useRouter()
 const route = useRoute()
@@ -168,6 +174,12 @@ const visible = ref(false)
 const dialogDish = ref(null)
 const flavors = ref([])
 const chosedflavors = ref([])
+const tableContext = reactive({
+  tableId: '',
+  storeId: '',
+  storeName: '',
+  tableNo: '',
+})
 
 const CartAllNumber = computed(() => cartList.value.reduce((acc, cur) => acc + cur.number, 0))
 const CartAllPrice = computed(() => cartList.value.reduce((acc, cur) => acc + cur.amount * cur.number, 0))
@@ -183,7 +195,9 @@ function parseList(str) {
 }
 
 async function getCategoryData() {
-  const res = await getCategoryAPI()
+  const params = {}
+  if (tableContext.storeId) params.storeId = Number(tableContext.storeId)
+  const res = await getCategoryAPI(params)
   categoryList.value = res.data || []
 }
 
@@ -192,10 +206,10 @@ async function getDishOrSetmealList(index) {
   const cat = categoryList.value[index]
   if (!cat) return
   if (cat.type === 1) {
-    const res = await getDishListAPI(cat.id)
+    const res = await getDishListAPI(cat.id, tableContext.storeId ? Number(tableContext.storeId) : undefined)
     dishList.value = res.data || []
   } else {
-    const res = await getSetmealListAPI(cat.id)
+    const res = await getSetmealListAPI(cat.id, tableContext.storeId ? Number(tableContext.storeId) : undefined)
     dishList.value = res.data || []
   }
 }
@@ -310,7 +324,9 @@ async function clearCart() {
 }
 
 function submitOrder() {
-  router.push({ path: '/submit', query: route.query })
+  const query = { ...route.query }
+  if (!query.tableId && tableContext.tableId) query.tableId = tableContext.tableId
+  router.push({ path: '/submit', query })
 }
 
 function goBack() {
@@ -318,6 +334,14 @@ function goBack() {
 }
 
 onMounted(async () => {
+  tableContext.tableId = getTableId()
+  tableContext.storeId = getStoreId()
+  tableContext.storeName = getStoreName()
+  tableContext.tableNo = getTableNo()
+  await initTableContext()
+  if (getTableId() && !tableContext.storeId) {
+    return
+  }
   try {
     const res = await getStatusAPI()
     status.value = res.data === 1
@@ -332,6 +356,26 @@ onMounted(async () => {
     // 401 等已由 request 拦截器 toast，这里只避免未捕获异常导致白屏
   }
 })
+
+async function initTableContext() {
+  const token = localStorage.getItem('token')
+  const tableId = getTableId()
+  if (!token || !tableId) return
+  try {
+    const res = await getTableInfoAPI(tableId)
+    const data = res.data || {}
+    persistTableContext(data)
+    tableContext.tableId = String(data.tableId || tableId)
+    tableContext.storeId = String(data.storeId || '')
+    tableContext.storeName = data.storeName || ''
+    tableContext.tableNo = data.tableNo || ''
+  } catch (e) {
+    tableContext.storeId = ''
+    tableContext.storeName = ''
+    tableContext.tableNo = ''
+    showToast(e?.message || '餐桌信息无效，请重新扫码')
+  }
+}
 </script>
 
 <style scoped>
@@ -344,6 +388,19 @@ onMounted(async () => {
   margin: 0 auto;
   padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   background: #fff;
+}
+
+.table-context {
+  margin: 0 12px 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #10B981;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .viewport {

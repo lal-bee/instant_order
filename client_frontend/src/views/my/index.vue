@@ -1,6 +1,10 @@
 <template>
   <div class="page-my">
     <header class="detail-header">
+      <button class="back-btn" type="button" @click="goBack" aria-label="返回">
+        <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
+        <span v-else class="back-fallback">‹</span>
+      </button>
       <span class="title">我的</span>
     </header>
 
@@ -18,10 +22,6 @@
     </div>
 
     <div class="white-box">
-      <div class="menu-row" @click="goAddress">
-        <span class="menu-text">地址管理</span>
-        <span class="arrow">›</span>
-      </div>
       <div class="menu-row" @click="goHistory">
         <span class="menu-text">历史订单</span>
         <span class="arrow">›</span>
@@ -60,7 +60,6 @@
           <div class="card-right">
             <div class="status-tag">{{ statusMap[item.status]?.name || '未知' }}</div>
             <div class="price">￥{{ item.amount }}</div>
-            <div class="pack">共{{ item.packAmount ?? 0 }}份</div>
           </div>
         </div>
         <div class="card-actions">
@@ -101,9 +100,9 @@ const userStore = useUserStore()
 const statusMap = {
   0: { name: '全部订单' },
   1: { name: '待付款' },
-  2: { name: '待接单' },
-  3: { name: '已接单' },
-  4: { name: '派送中' },
+  2: { name: '已支付（待制作）' },
+  3: { name: '制作中' },
+  4: { name: '待取餐' },
   5: { name: '已完成' },
   6: { name: '已取消' },
 }
@@ -122,6 +121,7 @@ const recentLoading = ref(true)
 const recentLoadMore = ref(false)
 const recentHasMore = ref(true)
 const pushMsgRef = ref(null)
+const backIconError = ref(false)
 
 async function getUserInfo() {
   const id = userStore.profile?.id
@@ -169,14 +169,18 @@ function loadMoreRecent() {
   fetchRecent(true)
 }
 
-function goAddress() {
-  router.push('/address')
-}
 function goHistory() {
   router.push('/order-list')
 }
 function goUpdateMy() {
   router.push('/update-my')
+}
+function goBack() {
+  if (window.history.length > 1) {
+    router.back()
+    return
+  }
+  router.replace('/order')
 }
 function toOrderDetail(id) {
   router.push({ path: '/order-detail', query: { orderId: id } })
@@ -229,6 +233,30 @@ onMounted(() => {
   background: #fff;
   border-bottom: 1px solid #eee;
   z-index: 100;
+}
+.detail-header .back-btn {
+  position: absolute;
+  left: 12px;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-header .back {
+  width: 18px;
+  height: 18px;
+}
+.detail-header .back-fallback {
+  font-size: 20px;
+  line-height: 1;
+  color: #111827;
+  transform: translateY(-1px);
 }
 .detail-header .title {
   font-size: 16px;

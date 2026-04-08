@@ -1,6 +1,10 @@
 <template>
   <div class="page-remark">
     <header class="detail-header">
+      <button class="back-btn" type="button" @click="goBack" aria-label="返回">
+        <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
+        <span v-else class="back-fallback">‹</span>
+      </button>
       <span class="title">订单备注</span>
     </header>
     <div class="content">
@@ -10,6 +14,15 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const backIconError = ref(false)
+
+function goBack() {
+  router.back()
+}
 </script>
 
 <style scoped>
@@ -35,6 +48,33 @@
   justify-content: center;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.back-btn {
+  position: absolute;
+  left: 12px;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back {
+  width: 18px;
+  height: 18px;
+}
+
+.back-fallback {
+  font-size: 20px;
+  line-height: 1;
+  color: #111827;
+  transform: translateY(-1px);
 }
 
 .title {

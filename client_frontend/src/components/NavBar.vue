@@ -2,7 +2,10 @@
   <div class="navbar-fixed">
     <div class="navbar" :style="{ paddingTop: safeTop }">
       <div class="logo-row">
-        <img class="back" src="/icon/back.png" alt="返回" @click="back" />
+        <button class="back-btn" type="button" @click="back" aria-label="返回">
+          <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
+          <span v-else class="back-fallback">‹</span>
+        </button>
         <img class="brand" src="/images/logo.png" alt="logo" />
         <span class="logo-text">扫码点餐</span>
       </div>
@@ -10,10 +13,10 @@
     <div class="info">
       <div class="info1">
         <span class="status">{{ status ? '营业中' : '打烊中' }}</span>
-        <span class="price">配送费6元</span>
+        <span class="price">堂食点餐</span>
       </div>
       <div class="info2">
-        <span class="address">餐厅地址：广州市番禺区亚运城广场</span>
+        <span class="address">请扫码后在门店内点餐，当前订单仅支持堂食</span>
         <a href="tel:1999" class="phone-link">联系商家</a>
       </div>
     </div>
@@ -33,6 +36,7 @@ const props = defineProps({
 const router = useRouter()
 const statusLocal = ref(true)
 const safeTop = ref('env(safe-area-inset-top, 0px)')
+const backIconError = ref(false)
 
 const status = computed(() => props.status !== null && props.status !== undefined ? props.status : statusLocal.value)
 
@@ -77,10 +81,29 @@ function back() {
   min-width: 0;
 }
 
+.back-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .back {
-  width: 24px;
-  height: 20px;
-  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.back-fallback {
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .brand {

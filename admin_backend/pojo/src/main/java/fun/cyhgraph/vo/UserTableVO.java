@@ -11,10 +11,9 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserLoginVO implements Serializable {
-
-    private Integer id;
-    private String username;
-    private String name;
-    private String token;
+public class UserTableVO implements Serializable {
+    private Long tableId;
+    private Long storeId;
+    private String storeName;
+    private String tableNo;
 }

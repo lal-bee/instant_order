@@ -57,13 +57,13 @@ public class OrderController {
     }
 
     /**
-     * 接单
+     * 开始制作
      * @param orderConfirmDTO
      * @return
      */
     @PutMapping("/confirm")
     public Result confirm(@RequestBody OrderConfirmDTO orderConfirmDTO){
-        log.info("修改订单状态为接单：{}", orderConfirmDTO);
+        log.info("修改订单状态为制作中：{}", orderConfirmDTO);
         orderService.confirm(orderConfirmDTO);
         return Result.success();
     }
@@ -93,13 +93,13 @@ public class OrderController {
     }
 
     /**
-     * 派送订单
+     * 出餐完成（待取餐）
      * @param id
      * @return
      */
     @PutMapping("/delivery/{id}")
     public Result delivery(@PathVariable Integer id){
-        log.info("派送中：{}", id);
+        log.info("订单出餐完成（待取餐）：{}", id);
         orderService.delivery(id);
         return Result.success();
     }

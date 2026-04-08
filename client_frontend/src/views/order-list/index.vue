@@ -1,7 +1,10 @@
 <template>
   <div class="page-order-list">
     <header class="detail-header">
-      <img class="back" src="/icon/back.png" alt="返回" @click="goBack" />
+      <button class="back-btn" type="button" @click="goBack" aria-label="返回">
+        <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
+        <span v-else class="back-fallback">‹</span>
+      </button>
       <span class="title">历史订单</span>
     </header>
 
@@ -44,7 +47,6 @@
           <div class="card-right">
             <div class="status-tag">{{ statusMap[item.status]?.name || '未知' }}</div>
             <div class="price">￥{{ item.amount }}</div>
-            <div class="pack">共{{ item.packAmount ?? 0 }}份</div>
           </div>
         </div>
         <div class="card-actions">
@@ -87,9 +89,9 @@ const statusOptions = [
 const statusMap = {
   0: { name: '全部订单' },
   1: { name: '待付款' },
-  2: { name: '待接单' },
-  3: { name: '已接单' },
-  4: { name: '派送中' },
+  2: { name: '已支付（待制作）' },
+  3: { name: '制作中' },
+  4: { name: '待取餐' },
   5: { name: '已完成' },
   6: { name: '已取消' },
 }
@@ -101,6 +103,7 @@ const total = ref(0)
 const loading = ref(true)
 const loadMoreLoading = ref(false)
 const pushMsgRef = ref(null)
+const backIconError = ref(false)
 
 const hasMore = ref(true)
 
@@ -202,13 +205,29 @@ onMounted(() => {
   border-bottom: 1px solid #eee;
   z-index: 100;
 }
-.detail-header .back {
+.detail-header .back-btn {
   position: absolute;
   left: 12px;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   width: 24px;
   height: 24px;
-  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-header .back {
+  width: 18px;
+  height: 18px;
+}
+.detail-header .back-fallback {
+  font-size: 20px;
+  line-height: 1;
+  color: #111827;
+  transform: translateY(-1px);
 }
 .detail-header .title {
   font-size: 16px;

@@ -76,7 +76,7 @@ public class OrderController {
      *
      * @param page
      * @param pageSize
-     * @param status   订单状态 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消
+     * @param status   订单状态 1待付款 2已支付(待制作) 3制作中 4待取餐 5已完成 6已取消
      * @return
      */
     @GetMapping("/historyOrders")

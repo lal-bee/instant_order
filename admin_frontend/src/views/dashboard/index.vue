@@ -58,7 +58,7 @@ const init = async () => {
   }
 }
 
-// 获取待处理，待派送，派送中数量
+// 获取待制作、制作中、待取餐数量
 const getOrderListBy3Status = async () => {
   try {
     const res = await getOrderListByAPI()

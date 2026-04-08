@@ -28,7 +28,7 @@ public class ScanParamsController {
      * 正式发布后：用户扫码进入时前端调用此接口，将 storeId、tableId 写入 Redis
      */
     @PostMapping
-    public Result<Void> save(@RequestParam Long storeId, @RequestParam String tableId) {
+    public Result<Void> save(@RequestParam Long storeId, @RequestParam Long tableId) {
         Integer userId = BaseContext.getCurrentId();
         String key = KEY_PREFIX + userId;
         String value = storeId + ":" + tableId;

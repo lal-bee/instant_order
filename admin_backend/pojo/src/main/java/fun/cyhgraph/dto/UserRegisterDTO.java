@@ -4,12 +4,11 @@ import lombok.Data;
 
 import java.io.Serializable;
 
-/**
- * Client端用户登录
- */
 @Data
-public class UserLoginDTO implements Serializable {
+public class UserRegisterDTO implements Serializable {
 
     private String username;
     private String password;
+    private String confirmPassword;
+    private String nickname;
 }

@@ -15,4 +15,13 @@ public class MessageConstant {
     public static final String ORDER_STATUS_ERROR = "订单状态错误";
     public static final String UNKNOWN_ERROR = "未知错误";
     public static final String SCAN_PARAMS_REQUIRED = "缺少门店号或座位号，请扫描餐桌二维码进入";
+    public static final String TABLE_NOT_FOUND = "餐桌不存在";
+    public static final String TABLE_DISABLED = "餐桌已停用";
+    public static final String STORE_NOT_FOUND = "门店不存在";
+    public static final String TABLE_STORE_MISMATCH = "餐桌与门店不匹配";
+    public static final String USERNAME_IS_NULL = "用户名不能为空";
+    public static final String PASSWORD_IS_NULL = "密码不能为空";
+    public static final String CONFIRM_PASSWORD_ERROR = "两次密码不一致";
+    public static final String USERNAME_ALREADY_EXIST = "用户名已存在";
+    public static final String USER_ACCOUNT_LOCKED = "账号已禁用";
 }

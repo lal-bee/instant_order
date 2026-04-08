@@ -15,6 +15,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
@@ -34,10 +35,13 @@ public class SetmealController {
      * @return
      */
     @GetMapping("/list/{id}")
-    @Cacheable(cacheNames = "setmealCache", key = "#id")
-    public Result<List<Setmeal>> getSetmealList(@PathVariable Integer id){
-        log.info("要查询的套餐分类id:{}", id);
-        List<Setmeal> setmealList = setmealService.getList(id);
+    @Cacheable(cacheNames = "setmealCache", key = "#id + '_' + #storeId")
+    public Result<List<Setmeal>> getSetmealList(@PathVariable Integer id, @RequestParam(required = false) Long storeId){
+        log.info("要查询的套餐分类id:{}, storeId:{}", id, storeId);
+        if (storeId == null) {
+            storeId = 1L;
+        }
+        List<Setmeal> setmealList = setmealService.getListByStoreId(storeId, id);
         return Result.success(setmealList);
     }
 

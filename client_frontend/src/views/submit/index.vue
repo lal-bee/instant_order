@@ -1,11 +1,18 @@
 <template>
   <div class="page-submit">
     <header class="detail-header">
-      <img class="back" src="/icon/back.png" alt="返回" @click="goBack" />
+      <button class="back-btn" type="button" @click="goBack" aria-label="返回">
+        <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
+        <span v-else class="back-fallback">‹</span>
+      </button>
       <span class="title">确认订单</span>
     </header>
 
     <div class="main">
+      <section class="section">
+        <h3 class="section-title">当前桌台</h3>
+        <div class="table-context">{{ storeName || '-' }} / {{ tableNo || '-' }}</div>
+      </section>
       <!-- 购物车清单 -->
       <section class="section cart-section">
         <h3 class="section-title">商品清单</h3>
@@ -62,11 +69,7 @@
         <div class="pay-opt">
           <label class="radio">
             <input v-model.number="payMethod" type="radio" :value="1" />
-            <span>微信支付</span>
-          </label>
-          <label class="radio">
-            <input v-model.number="payMethod" type="radio" :value="2" />
-            <span>支付宝</span>
+            <span>在线支付</span>
           </label>
         </div>
       </section>
@@ -96,7 +99,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { getCartAPI } from '@/api/cart'
 import { submitOrderAPI } from '@/api/order'
 import { showToast } from '@/utils/toast'
-import { getStoreId, getTableId } from '@/utils/url'
+import { getStoreId, getTableId, getTableNo, getStoreName } from '@/utils/url'
 
 const router = useRouter()
 const route = useRoute()
@@ -104,8 +107,11 @@ const cartList = ref([])
 const remark = ref('')
 const tablewareStatus = ref(1) // 1 按餐量 0 具体数量
 const tablewareNumber = ref(0)
-const payMethod = ref(1) // 1 微信 2 支付宝
+const payMethod = ref(1) // 统一在线支付
 const submitting = ref(false)
+const storeName = ref('')
+const tableNo = ref('')
+const backIconError = ref(false)
 
 const cartTotalPrice = computed(() => {
   const total = cartList.value.reduce((acc, cur) => acc + (cur.amount || 0) * (cur.number || 0), 0)
@@ -123,7 +129,6 @@ async function loadCart() {
 
 function goBack() {
   const query = { ...route.query }
-  if (!query.storeId) query.storeId = getStoreId()
   if (!query.tableId) query.tableId = getTableId()
   router.replace({ path: '/order', query })
 }
@@ -136,6 +141,7 @@ async function submitOrder() {
   // 门店号、桌号：优先来自当前 URL（扫码带参），否则来自 sessionStorage（扫码后登录再进本页）
   const storeId = getStoreId()
   const tableId = getTableId()
+  const tableNoVal = getTableNo()
   if (!storeId || !tableId) {
     showToast('缺少门店号或座位号，请扫描餐桌二维码进入')
     return
@@ -144,14 +150,12 @@ async function submitOrder() {
   try {
     const res = await submitOrderAPI({
       storeId: Number(storeId),
-      tableId: String(tableId),
+      tableId: Number(tableId),
+      tableNo: tableNoVal || undefined,
       payMethod: payMethod.value,
       remark: remark.value.trim(),
-      deliveryStatus: 1,
-      estimatedDeliveryTime: null,
       tablewareStatus: tablewareStatus.value,
       tablewareNumber: tablewareStatus.value === 0 ? tablewareNumber.value : 0,
-      packAmount: 0,
       amount: Number(cartTotalPrice.value),
     })
     submitting.value = false
@@ -159,7 +163,6 @@ async function submitOrder() {
     const orderId = res.data?.id
     const orderNumber = res.data?.orderNumber
     const query = { ...route.query, orderId, orderNumber }
-    if (!query.storeId) query.storeId = storeId
     if (!query.tableId) query.tableId = tableId
     router.replace({ path: '/pay', query })
   } catch (e) {
@@ -168,6 +171,8 @@ async function submitOrder() {
 }
 
 onMounted(() => {
+  storeName.value = getStoreName()
+  tableNo.value = getTableNo()
   loadCart()
 })
 </script>
@@ -198,13 +203,29 @@ onMounted(() => {
   border-bottom: 1px solid #eee;
   z-index: 100;
 }
-.detail-header .back {
+.detail-header .back-btn {
   position: absolute;
   left: 12px;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   width: 24px;
   height: 24px;
-  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-header .back {
+  width: 18px;
+  height: 18px;
+}
+.detail-header .back-fallback {
+  font-size: 20px;
+  line-height: 1;
+  color: #111827;
+  transform: translateY(-1px);
 }
 .detail-header .title {
   font-size: 16px;
@@ -261,6 +282,15 @@ onMounted(() => {
   font-size: 14px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
+}
+
+.table-context {
+  font-size: 14px;
+  color: #065f46;
+  background: #ecfdf5;
+  border: 1px solid #10B981;
+  border-radius: 6px;
+  padding: 8px 10px;
 }
 
 .tableware-opt,

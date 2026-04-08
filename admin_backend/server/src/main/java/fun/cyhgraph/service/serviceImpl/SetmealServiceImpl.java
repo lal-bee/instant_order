@@ -132,6 +132,12 @@ public class SetmealServiceImpl implements SetmealService {
         return setmealList;
     }
 
+    @Override
+    public List<Setmeal> getListByStoreId(Long storeId, Integer categoryId) {
+        // 当前套餐仍是总部维度，兼容保留 storeId 参数，避免前后端协议分叉
+        return getList(categoryId);
+    }
+
     /**
      * 根据套餐id查询所有菜品
      * @param id
