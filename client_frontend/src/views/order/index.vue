@@ -5,6 +5,9 @@
       <span>当前门店：{{ tableContext.storeName || '-' }}</span>
       <span>当前桌号：{{ tableContext.tableNo || '-' }}</span>
     </div>
+    <div class="top-actions">
+      <button class="btn-my" type="button" @click="goMyPage">我的</button>
+    </div>
     <div class="viewport">
       <!-- 未登录或无数据时提示 -->
       <div v-if="categoryList.length === 0" class="empty-tip">
@@ -243,6 +246,10 @@ function goLogin() {
   router.push({ path: '/login', query: { redirect } })
 }
 
+function goMyPage() {
+  router.push('/my')
+}
+
 function chooseNorm(dish) {
   flavors.value = dish.flavors || []
   dialogDish.value = { ...dish }
@@ -401,6 +408,23 @@ async function initTableContext() {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+}
+
+.top-actions {
+  margin: 0 12px 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-my {
+  height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 15px;
+  background: #10B981;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .viewport {
