@@ -24,6 +24,12 @@ export const layoutChildrenRoutes: RouteRecordRaw[] = [
     meta: { title: '订单管理', icon: 'Collection', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
   },
   {
+    path: 'coupon',
+    name: 'coupon',
+    component: () => import('./views/coupon/index.vue'),
+    meta: { title: '营销管理 / 优惠券管理', icon: 'Discount', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
+  },
+  {
     path: 'category',
     name: 'category',
     component: () => import('./views/category/index.vue'),

@@ -24,6 +24,9 @@ public class User implements Serializable {
     private String idNumber;
     private String pic;
     private Integer status;
+    private Integer isMember;
+    private Integer memberLevel;
+    private LocalDateTime memberExpireTime;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 

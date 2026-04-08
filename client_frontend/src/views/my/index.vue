@@ -26,6 +26,14 @@
         <span class="menu-text">历史订单</span>
         <span class="arrow">›</span>
       </div>
+      <div class="menu-row" @click="goCouponCenter">
+        <span class="menu-text">领券中心</span>
+        <span class="arrow">›</span>
+      </div>
+      <div class="menu-row" @click="goMyCoupon">
+        <span class="menu-text">我的优惠券</span>
+        <span class="arrow">›</span>
+      </div>
       <div class="menu-row" @click="goUpdateMy">
         <span class="menu-text">信息设置</span>
         <span class="arrow">›</span>
@@ -174,6 +182,12 @@ function goHistory() {
 }
 function goUpdateMy() {
   router.push('/update-my')
+}
+function goCouponCenter() {
+  router.push('/coupon-center')
+}
+function goMyCoupon() {
+  router.push('/my-coupon')
 }
 function goBack() {
   if (window.history.length > 1) {

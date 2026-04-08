@@ -14,20 +14,24 @@ import fun.cyhgraph.mapper.*;
 import fun.cyhgraph.result.PageResult;
 import fun.cyhgraph.service.OrderService;
 import fun.cyhgraph.service.TableInfoService;
+import fun.cyhgraph.service.UserCouponService;
 import fun.cyhgraph.vo.OrderPaymentVO;
 import fun.cyhgraph.vo.OrderStatisticsVO;
 import fun.cyhgraph.vo.OrderSubmitVO;
 import fun.cyhgraph.vo.OrderVO;
 import fun.cyhgraph.vo.UserTableVO;
+import fun.cyhgraph.vo.coupon.CouponLockResultVO;
 import fun.cyhgraph.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +57,8 @@ public class OrderServiceImpl implements OrderService {
     private RedisTemplate redisTemplate;
     @Autowired
     private TableInfoService tableInfoService;
+    @Autowired
+    private UserCouponService userCouponService;
 
     private static final String SCAN_PARAMS_KEY_PREFIX = "scan_params:user:";
 
@@ -62,6 +68,7 @@ public class OrderServiceImpl implements OrderService {
      * @param orderSubmitDTO
      * @return
      */
+    @Transactional
     public OrderSubmitVO submit(OrderSubmitDTO orderSubmitDTO) {
         // 1、堂食参数（storeId+tableId）
         Long storeId = orderSubmitDTO.getStoreId();
@@ -99,6 +106,10 @@ public class OrderServiceImpl implements OrderService {
             throw new BaseException(MessageConstant.TABLE_STORE_MISMATCH);
         }
         User user = userMapper.getById(userId);
+        BigDecimal originAmount = orderSubmitDTO.getAmount();
+        CouponLockResultVO couponLock = userCouponService.lockCouponForOrder(
+                orderSubmitDTO.getUserCouponId(), userId, storeId, originAmount
+        );
         order.setStoreId(table.getStoreId());
         order.setTableId(table.getTableId());
         order.setTableNo(table.getTableNo());
@@ -111,9 +122,17 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(Order.PENDING_PAYMENT); // 刚下单提交，此时是待付款状态
         order.setPayStatus(Order.UN_PAID); // 未支付
         order.setOrderTime(LocalDateTime.now());
+        order.setOriginAmount(couponLock.getOriginAmount());
+        order.setCouponAmount(couponLock.getCouponAmount());
+        order.setAmount(couponLock.getPayAmount());
+        order.setCouponId(couponLock.getCouponId());
+        order.setUserCouponId(couponLock.getUserCouponId());
         this.order = order;
         // 4、向订单表插入1条数据
         orderMapper.insert(order);
+        if (order.getUserCouponId() != null) {
+            userCouponService.bindOrder(order.getUserCouponId(), userId, order.getId());
+        }
         // 订单明细数据
         List<OrderDetail> orderDetailList = new ArrayList<>();
         // 遍历购物车中所有的商品，逐个加到订单明细表
@@ -199,6 +218,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param id
      */
+    @Transactional
     public void userCancelById(Integer id) throws Exception {
         // 根据id查询订单
         Order ordersDB = orderMapper.getById(id);
@@ -223,6 +243,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason("用户取消");
         order.setCancelTime(LocalDateTime.now());
         orderMapper.update(order);
+        userCouponService.releaseLockedCoupon(ordersDB);
     }
 
     /**
@@ -261,6 +282,7 @@ public class OrderServiceImpl implements OrderService {
      * @param orderPaymentDTO
      * @return
      */
+    @Transactional
     public OrderPaymentVO payment(OrderPaymentDTO orderPaymentDTO) {
         // 按订单号查询订单，避免使用实例变量 this.order（多请求会错乱）
         Order order = orderMapper.getByNumber(orderPaymentDTO.getOrderNumber());
@@ -280,6 +302,7 @@ public class OrderServiceImpl implements OrderService {
         Integer OrderStatus = Order.TO_BE_PREPARED;
         LocalDateTime checkOutTime = LocalDateTime.now();
         orderMapper.updateStatus(OrderStatus, OrderPaidStatus, checkOutTime, order.getId());
+        userCouponService.markCouponUsed(order);
 
         Map map = new HashMap();
         map.put("type", 1);
@@ -342,6 +365,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param orderRejectionDTO
      */
+    @Transactional
     public void reject(OrderRejectionDTO orderRejectionDTO) {
         Integer orderId = orderRejectionDTO.getId();
         Order orderDB = orderMapper.getById(orderId);
@@ -359,6 +383,7 @@ public class OrderServiceImpl implements OrderService {
         order.setRejectionReason(orderRejectionDTO.getRejectionReason());
         order.setCancelTime(LocalDateTime.now());
         orderMapper.update(order);
+        userCouponService.releaseLockedCoupon(orderDB);
     }
 
     /**
@@ -366,6 +391,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param orderCancelDTO
      */
+    @Transactional
     public void cancel(OrderCancelDTO orderCancelDTO) {
         Integer orderId = orderCancelDTO.getId();
         Order orderDB = orderMapper.getById(orderId);
@@ -378,6 +404,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason(orderCancelDTO.getCancelReason());
         order.setCancelTime(LocalDateTime.now());
         orderMapper.update(order);
+        userCouponService.releaseLockedCoupon(orderDB);
     }
 
     /**

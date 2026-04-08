@@ -1,7 +1,7 @@
 export enum RoleEnum {
-  EMPLOYEE = 'EMPLOYEE',
-  STORE_MANAGER = 'STORE_MANAGER',
-  CHAIRMAN = 'CHAIRMAN',
+  EMPLOYEE = '0',
+  STORE_MANAGER = '1',
+  CHAIRMAN = '2',
 }
 
 export type RoleLike = RoleEnum | string | number | null | undefined
@@ -22,15 +22,17 @@ export const ROLE_ORDER_MAP: Record<RoleEnum, number> = {
 
 export const ROLE_ALIAS_MAP: Record<string, RoleEnum> = {
   '2': RoleEnum.CHAIRMAN,
-  CHAIRMAN: RoleEnum.CHAIRMAN,
-  BOSS: RoleEnum.CHAIRMAN,
 
   '1': RoleEnum.STORE_MANAGER,
+
+  '0': RoleEnum.EMPLOYEE,
+
+  // 兼容历史存量值
+  CHAIRMAN: RoleEnum.CHAIRMAN,
+  BOSS: RoleEnum.CHAIRMAN,
   STORE_MANAGER: RoleEnum.STORE_MANAGER,
   STOREMANAGER: RoleEnum.STORE_MANAGER,
   MANAGER: RoleEnum.STORE_MANAGER,
-
-  '0': RoleEnum.EMPLOYEE,
   EMPLOYEE: RoleEnum.EMPLOYEE,
   STAFF: RoleEnum.EMPLOYEE,
 }

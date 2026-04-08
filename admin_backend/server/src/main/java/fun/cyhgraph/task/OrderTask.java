@@ -2,6 +2,7 @@ package fun.cyhgraph.task;
 
 import fun.cyhgraph.entity.Order;
 import fun.cyhgraph.mapper.OrderMapper;
+import fun.cyhgraph.service.UserCouponService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,6 +21,8 @@ public class OrderTask {
 
     @Autowired
     private OrderMapper orderMapper;
+    @Autowired
+    private UserCouponService userCouponService;
 
     /**
      * 处理支付超时订单
@@ -38,6 +41,7 @@ public class OrderTask {
                 order.setCancelReason("支付超时，自动取消");
                 order.setCancelTime(LocalDateTime.now());
                 orderMapper.update(order);
+                userCouponService.releaseLockedCoupon(order);
             });
         }
     }

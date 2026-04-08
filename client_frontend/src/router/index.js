@@ -14,6 +14,8 @@ const routes = [
   { path: '/order-list', name: 'OrderList', component: () => import('@/views/order-list/index.vue'), meta: { title: '订单列表', auth: true } },
   { path: '/order-detail', name: 'OrderDetail', component: () => import('@/views/order-detail/index.vue'), meta: { title: '订单详情', auth: true } },
   { path: '/my', name: 'My', component: () => import('@/views/my/index.vue'), meta: { title: '我的', auth: true } },
+  { path: '/coupon-center', name: 'CouponCenter', component: () => import('@/views/coupon-center/index.vue'), meta: { title: '领券中心', auth: true } },
+  { path: '/my-coupon', name: 'MyCoupon', component: () => import('@/views/my-coupon/index.vue'), meta: { title: '我的优惠券', auth: true } },
   { path: '/update-my', name: 'UpdateMy', component: () => import('@/views/update-my/index.vue'), meta: { title: '信息设置', auth: true } },
 ]
 

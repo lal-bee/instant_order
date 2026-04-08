@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fun.cyhgraph.mapper.UserCouponMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into user_coupon(user_id, coupon_id, status,
+                                threshold_amount, discount_amount, discount_rate,
+                                start_time, end_time,
+                                receive_time, lock_time, use_time, order_id,
+                                create_user, update_user, create_time, update_time)
+        values (#{userId}, #{couponId}, #{status},
+                #{thresholdAmount}, #{discountAmount}, #{discountRate},
+                #{startTime}, #{endTime},
+                #{receiveTime}, #{lockTime}, #{useTime}, #{orderId},
+                #{createUser}, #{updateUser}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="getById" resultType="fun.cyhgraph.entity.UserCoupon">
+        select uc.*, c.name as coupon_name, c.coupon_type, c.publish_type, c.store_id,
+               c.receive_type, c.status as coupon_status, s.name as store_name
+        from user_coupon uc
+                 left join coupon c on uc.coupon_id = c.id
+                 left join store s on c.store_id = s.id
+        where uc.id = #{id}
+    </select>
+
+    <select id="getByOrderId" resultType="fun.cyhgraph.entity.UserCoupon">
+        select *
+        from user_coupon
+        where order_id = #{orderId}
+        limit 1
+    </select>
+
+    <select id="countUserReceive" resultType="java.lang.Integer">
+        select count(1)
+        from user_coupon
+        where user_id = #{userId}
+          and coupon_id = #{couponId}
+    </select>
+
+    <update id="lockCouponForOrder">
+        update user_coupon
+        set status = 2,
+            lock_time = #{lockTime},
+            order_id = #{orderId},
+            update_time = now()
+        where id = #{userCouponId}
+          and user_id = #{userId}
+          and status = 1
+    </update>
+
+    <update id="bindOrder">
+        update user_coupon
+        set order_id = #{orderId},
+            update_time = now()
+        where id = #{userCouponId}
+          and user_id = #{userId}
+          and status = 2
+    </update>
+
+    <update id="unlockCouponByOrderId">
+        update user_coupon
+        set status = 1,
+            lock_time = null,
+            order_id = null,
+            update_time = #{updateTime}
+        where order_id = #{orderId}
+          and status = 2
+    </update>
+
+    <update id="unlockCouponByUserCouponId">
+        update user_coupon
+        set status = 1,
+            lock_time = null,
+            order_id = null,
+            update_time = #{updateTime}
+        where id = #{userCouponId}
+          and status = 2
+    </update>
+
+    <update id="markCouponUsedByOrderId">
+        update user_coupon
+        set status = 3,
+            use_time = #{useTime},
+            update_time = #{updateTime}
+        where order_id = #{orderId}
+          and status = 2
+    </update>
+
+    <update id="markCouponUsedByUserCouponId">
+        update user_coupon
+        set status = 3,
+            use_time = #{useTime},
+            update_time = #{updateTime}
+        where id = #{userCouponId}
+          and status = 2
+    </update>
+
+    <update id="batchMarkExpired">
+        update user_coupon
+        set status = 4,
+            update_time = #{updateTime}
+        where user_id = #{userId}
+          and status = 1
+          and end_time &lt; #{now}
+    </update>
+
+    <select id="listMyCoupons" resultType="fun.cyhgraph.entity.UserCoupon">
+        select uc.*, c.name as coupon_name, c.coupon_type, c.publish_type,
+               c.store_id, c.receive_type, c.status as coupon_status, s.name as store_name
+        from user_coupon uc
+                 left join coupon c on uc.coupon_id = c.id
+                 left join store s on c.store_id = s.id
+        where uc.user_id = #{userId}
+        <if test="status != null">
+            and uc.status = #{status}
+        </if>
+        <if test="now != null">
+            and (uc.end_time is null or uc.end_time &gt;= #{now} or uc.status in (3,4))
+        </if>
+        order by uc.id desc
+    </select>
+
+    <select id="listOrderAvailable" resultType="fun.cyhgraph.entity.UserCoupon">
+        select uc.*, c.name as coupon_name, c.coupon_type, c.publish_type,
+               c.store_id, c.receive_type, c.status as coupon_status, s.name as store_name
+        from user_coupon uc
+                 inner join coupon c on uc.coupon_id = c.id
+                 left join store s on c.store_id = s.id
+        where uc.user_id = #{userId}
+          and uc.status = 1
+          and c.status = 1
+          and uc.start_time &lt;= #{now}
+          and uc.end_time &gt;= #{now}
+          and uc.threshold_amount &lt;= #{amount}
+          and (c.publish_type = 1 or (c.publish_type = 2 and c.store_id = #{storeId}))
+          and (c.receive_type = 1 or (c.receive_type = 2 and #{isMember} = 1))
+        order by c.coupon_type asc, uc.end_time asc, uc.id desc
+    </select>
+
+    <select id="pageCouponRecords" resultType="fun.cyhgraph.vo.coupon.CouponRecordVO">
+        select uc.id as user_coupon_id,
+               uc.coupon_id,
+               uc.user_id,
+               u.name as user_name,
+               u.username,
+               uc.status,
+               uc.order_id,
+               uc.receive_time,
+               uc.lock_time,
+               uc.use_time,
+               uc.end_time
+        from user_coupon uc
+                 left join user u on uc.user_id = u.id
+        where uc.coupon_id = #{couponId}
+        <if test="query != null and query.recordType != null and query.recordType == 2">
+            and uc.status = 3
+        </if>
+        <if test="query != null and query.userCouponStatus != null">
+            and uc.status = #{query.userCouponStatus}
+        </if>
+        <if test="query != null and query.userName != null and query.userName != ''">
+            and (u.name like concat('%', #{query.userName}, '%')
+            or u.username like concat('%', #{query.userName}, '%'))
+        </if>
+        order by uc.id desc
+    </select>
+</mapper>

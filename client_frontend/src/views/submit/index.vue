@@ -73,13 +73,26 @@
           </label>
         </div>
       </section>
+
+      <section class="section">
+        <h3 class="section-title">优惠券</h3>
+        <div class="pay-opt">
+          <select v-model.number="selectedUserCouponId" class="coupon-select">
+            <option :value="0">不使用优惠券</option>
+            <option v-for="item in couponList" :key="item.id" :value="item.id">
+              {{ item.couponName }}（{{ item.couponType === 1 ? `满${item.thresholdAmount}减${item.discountAmount}` : `${item.discountRate}折` }}）
+            </option>
+          </select>
+        </div>
+      </section>
     </div>
 
     <!-- 底部：合计 + 提交 -->
     <div class="footer">
       <div class="total">
-        <span class="label">合计</span>
-        <span class="price">¥{{ cartTotalPrice }}</span>
+        <span class="label">原价 ¥{{ cartTotalPrice }}</span>
+        <span class="label">优惠 ¥{{ discountPrice }}</span>
+        <span class="price">应付 ¥{{ payAmount }}</span>
       </div>
       <button
         type="button"
@@ -98,6 +111,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getCartAPI } from '@/api/cart'
 import { submitOrderAPI } from '@/api/order'
+import { getOrderAvailableCouponAPI } from '@/api/coupon'
 import { showToast } from '@/utils/toast'
 import { getStoreId, getTableId, getTableNo, getStoreName } from '@/utils/url'
 
@@ -112,18 +126,52 @@ const submitting = ref(false)
 const storeName = ref('')
 const tableNo = ref('')
 const backIconError = ref(false)
+const couponList = ref([])
+const selectedUserCouponId = ref(0)
 
 const cartTotalPrice = computed(() => {
   const total = cartList.value.reduce((acc, cur) => acc + (cur.amount || 0) * (cur.number || 0), 0)
   return (Math.round(total * 100) / 100).toFixed(2)
+})
+const selectedCoupon = computed(() => couponList.value.find(item => item.id === selectedUserCouponId.value))
+const discountPrice = computed(() => {
+  const amount = Number(cartTotalPrice.value)
+  const coupon = selectedCoupon.value
+  if (!coupon) return '0.00'
+  if (coupon.couponType === 1) return Number(coupon.discountAmount || 0).toFixed(2)
+  const discount = amount * ((10 - Number(coupon.discountRate || 10)) / 10)
+  return Math.max(discount, 0).toFixed(2)
+})
+const payAmount = computed(() => {
+  const amount = Number(cartTotalPrice.value) - Number(discountPrice.value)
+  return Math.max(amount, 0).toFixed(2)
 })
 
 async function loadCart() {
   try {
     const res = await getCartAPI()
     cartList.value = res.data || []
+    await loadAvailableCoupons()
   } catch (e) {
     cartList.value = []
+    couponList.value = []
+  }
+}
+
+async function loadAvailableCoupons() {
+  const storeId = getStoreId()
+  if (!storeId) return
+  try {
+    const res = await getOrderAvailableCouponAPI({
+      storeId: Number(storeId),
+      amount: Number(cartTotalPrice.value),
+    })
+    couponList.value = res.data || []
+    if (!couponList.value.find(item => item.id === selectedUserCouponId.value)) {
+      selectedUserCouponId.value = 0
+    }
+  } catch (e) {
+    couponList.value = []
   }
 }
 
@@ -157,6 +205,7 @@ async function submitOrder() {
       tablewareStatus: tablewareStatus.value,
       tablewareNumber: tablewareStatus.value === 0 ? tablewareNumber.value : 0,
       amount: Number(cartTotalPrice.value),
+      userCouponId: selectedUserCouponId.value || undefined,
     })
     submitting.value = false
     showToast('下单成功')
@@ -314,6 +363,14 @@ onMounted(() => {
   font-size: 14px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
+}
+.coupon-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
 .footer {

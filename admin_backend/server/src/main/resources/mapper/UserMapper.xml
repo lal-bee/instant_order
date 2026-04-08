@@ -4,8 +4,10 @@
 <mapper namespace="fun.cyhgraph.mapper.UserMapper">
 
     <insert id="insert">
-        insert into user (username, password, name, openid, phone, gender, id_number, pic, status, create_time, update_time) VALUES
-        (#{username}, #{password}, #{name}, #{openid}, #{phone}, #{gender}, #{idNumber}, #{pic}, #{status}, #{createTime}, #{updateTime})
+        insert into user (username, password, name, openid, phone, gender, id_number, pic, status,
+                          is_member, member_level, member_expire_time, create_time, update_time) VALUES
+        (#{username}, #{password}, #{name}, #{openid}, #{phone}, #{gender}, #{idNumber}, #{pic}, #{status},
+         #{isMember}, #{memberLevel}, #{memberExpireTime}, #{createTime}, #{updateTime})
     </insert>
 
     <update id="update">
@@ -18,6 +20,9 @@
             <if test="phone != null">phone = #{phone},</if>
             <if test="pic != null">pic = #{pic},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="isMember != null">is_member = #{isMember},</if>
+            <if test="memberLevel != null">member_level = #{memberLevel},</if>
+            <if test="memberExpireTime != null">member_expire_time = #{memberExpireTime},</if>
             <if test="updateTime != null">update_time = #{updateTime}</if>
         </set>
         where id = #{id}

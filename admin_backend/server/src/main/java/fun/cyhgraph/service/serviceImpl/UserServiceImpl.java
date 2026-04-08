@@ -53,6 +53,8 @@ public class UserServiceImpl implements UserService {
                 .name(userRegisterDTO.getNickname())
                 .openid(localOpenid)
                 .status(1)
+                .isMember(0)
+                .memberLevel(0)
                 .createTime(now)
                 .updateTime(now)
                 .build();

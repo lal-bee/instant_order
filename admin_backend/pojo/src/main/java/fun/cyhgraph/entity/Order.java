@@ -54,6 +54,10 @@ public class Order implements Serializable {
     private Integer payMethod; // 支付方式 1微信，2支付宝
     private Integer payStatus; // 支付状态 0未支付 1已支付 2退款
     private BigDecimal amount; // 实收金额
+    private BigDecimal originAmount; // 原始金额（优惠前）
+    private BigDecimal couponAmount; // 优惠金额
+    private Integer couponId; // 使用的优惠券模板id
+    private Integer userCouponId; // 使用的用户券id
     private String remark; // 备注
     private String userName; // 用户名
     private String phone; // 手机号

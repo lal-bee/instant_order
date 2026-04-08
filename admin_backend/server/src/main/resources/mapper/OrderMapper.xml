@@ -6,10 +6,12 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into orders (number, status, user_id, order_time, checkout_time, pay_method, pay_status,
-                            amount, remark, phone, address, user_name, consignee, cancel_reason, rejection_reason,
+                            amount, origin_amount, coupon_amount, coupon_id, user_coupon_id,
+                            remark, phone, address, user_name, consignee, cancel_reason, rejection_reason,
                             cancel_time, tableware_number, tableware_status, store_id, table_id, table_no)
         VALUES (#{number}, #{status}, #{userId}, #{orderTime}, #{checkoutTime}, #{payMethod},
-                #{payStatus}, #{amount}, #{remark}, #{phone}, #{address}, #{userName}, #{consignee}, #{cancelReason},
+                #{payStatus}, #{amount}, #{originAmount}, #{couponAmount}, #{couponId}, #{userCouponId},
+                #{remark}, #{phone}, #{address}, #{userName}, #{consignee}, #{cancelReason},
                 #{rejectionReason}, #{cancelTime}, #{tablewareNumber}, #{tablewareStatus}, #{storeId}, #{tableId}, #{tableNo})
     </insert>
 

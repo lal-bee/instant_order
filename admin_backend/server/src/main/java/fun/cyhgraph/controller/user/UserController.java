@@ -52,6 +52,8 @@ public class UserController {
                 .id(user.getId())
                 .username(user.getUsername())
                 .name(user.getName())
+                .isMember(user.getIsMember())
+                .memberLevel(user.getMemberLevel())
                 .token(token)
                 .build();
         return Result.success(userLoginVO);

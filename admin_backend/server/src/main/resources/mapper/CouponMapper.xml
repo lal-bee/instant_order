@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fun.cyhgraph.mapper.CouponMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into coupon(name, coupon_type, publish_type, store_id, receive_type,
+                           threshold_amount, discount_amount, discount_rate,
+                           total_count, receive_count, used_count, per_user_limit,
+                           start_time, end_time, status, remark,
+                           create_user, update_user, create_time, update_time)
+        values (#{name}, #{couponType}, #{publishType}, #{storeId}, #{receiveType},
+                #{thresholdAmount}, #{discountAmount}, #{discountRate},
+                #{totalCount}, #{receiveCount}, #{usedCount}, #{perUserLimit},
+                #{startTime}, #{endTime}, #{status}, #{remark},
+                #{createUser}, #{updateUser}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        update coupon
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="couponType != null">coupon_type = #{couponType},</if>
+            <if test="publishType != null">publish_type = #{publishType},</if>
+            <if test="storeId != null">store_id = #{storeId},</if>
+            <if test="receiveType != null">receive_type = #{receiveType},</if>
+            <if test="thresholdAmount != null">threshold_amount = #{thresholdAmount},</if>
+            <if test="discountAmount != null">discount_amount = #{discountAmount},</if>
+            <if test="discountRate != null">discount_rate = #{discountRate},</if>
+            <if test="totalCount != null">total_count = #{totalCount},</if>
+            <if test="perUserLimit != null">per_user_limit = #{perUserLimit},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_user = #{updateUser},
+            update_time = #{updateTime}
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="getById" resultType="fun.cyhgraph.entity.Coupon">
+        select c.*, s.name as store_name
+        from coupon c
+                 left join store s on c.store_id = s.id
+        where c.id = #{id}
+    </select>
+
+    <select id="pageQuery" resultType="fun.cyhgraph.entity.Coupon">
+        select c.*, s.name as store_name
+        from coupon c
+                 left join store s on c.store_id = s.id
+        <where>
+            <if test="name != null and name != ''">
+                and c.name like concat('%', #{name}, '%')
+            </if>
+            <if test="couponType != null">
+                and c.coupon_type = #{couponType}
+            </if>
+            <if test="status != null">
+                and c.status = #{status}
+            </if>
+            <if test="publishType != null">
+                and c.publish_type = #{publishType}
+            </if>
+            <if test="storeId != null">
+                and c.store_id = #{storeId}
+            </if>
+        </where>
+        order by c.id desc
+    </select>
+
+    <update id="updateStatus">
+        update coupon
+        set status = #{status},
+            update_user = #{updateUser},
+            update_time = now()
+        where id = #{id}
+    </update>
+
+    <update id="increaseReceiveCount">
+        update coupon
+        set receive_count = receive_count + 1,
+            update_time = now()
+        where id = #{couponId}
+          and status = 1
+          and receive_count &lt; total_count
+    </update>
+
+    <update id="increaseUsedCount">
+        update coupon
+        set used_count = used_count + 1,
+            update_time = now()
+        where id = #{couponId}
+    </update>
+
+    <select id="listReceiveList" resultType="fun.cyhgraph.entity.Coupon">
+        select c.*, s.name as store_name
+        from coupon c
+                 left join store s on c.store_id = s.id
+        where c.status = 1
+          and c.receive_count &lt; c.total_count
+          and c.start_time &lt;= #{now}
+          and c.end_time &gt;= #{now}
+          and (c.publish_type = 1 or (c.publish_type = 2 and c.store_id = #{storeId}))
+          and (c.receive_type = 1 or (c.receive_type = 2 and #{isMember} = 1))
+        order by c.publish_type asc, c.id desc
+    </select>
+</mapper>
