@@ -71,9 +71,6 @@ const init = async () => {
     name: pageData.name,
     storeId: pageData.storeId,
   })
-  console.log(res)
-  console.log('员工列表')
-  console.log(res.data)
   employeeList.value = (res.data.records || []).sort((a: employee, b: employee) => {
     const roleDiff = (ROLE_ORDER_MAP[normalizeRole(b.role)] || 0) - (ROLE_ORDER_MAP[normalizeRole(a.role)] || 0)
     if (roleDiff !== 0) return roleDiff
@@ -104,8 +101,6 @@ const handleSizeChange = (val: number) => {
 // 修改员工(路径传参，到update页面后，根据id查询员工信息，回显到表单中)
 const router = useRouter()
 const update_btn = (row: any) => {
-  console.log('要修改的行数据')
-  console.log(row)
   router.push({
     name: 'employee_update',
     query: {
@@ -140,9 +135,6 @@ const genderText = (gender: number) => genderMap[gender] || '-'
 
 // 修改员工状态
 const change_btn = async (row: any) => {
-  console.log('要修改的行数据')
-  console.log(row)
-  // const status = row.status === 1 ? 0 : 1
   await updateEmployeeStatusAPI(row.id)
   // 修改后刷新页面，更新数据
   init()
@@ -154,8 +146,6 @@ const change_btn = async (row: any) => {
 
 // 删除员工
 const delete_btn = (row: any) => {
-  console.log('要删除的行数据')
-  console.log(row)
   ElMessageBox.confirm(
     '该操作会永久删除员工，是否继续？',
     'Warning',
@@ -166,8 +156,6 @@ const delete_btn = (row: any) => {
     }
   )
     .then(async () => {
-      console.log('要删除的行数据')
-      console.log(row)
       await deleteEmployeeAPI(row.id)
       // 删除后刷新页面，更新数据
       init()

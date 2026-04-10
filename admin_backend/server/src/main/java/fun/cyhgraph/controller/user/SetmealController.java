@@ -46,6 +46,20 @@ public class SetmealController {
     }
 
     /**
+     * 查询全部启用套餐（不按分类）
+     */
+    @GetMapping("/all")
+    @Cacheable(cacheNames = "setmealCache", key = "'all_' + #storeId")
+    public Result<List<Setmeal>> getAllSetmealList(@RequestParam(required = false) Long storeId){
+        if (storeId == null) {
+            storeId = 1L;
+        }
+        log.info("查询全部启用套餐, storeId:{}", storeId);
+        List<Setmeal> setmealList = setmealService.getEnabledListByStoreId(storeId);
+        return Result.success(setmealList);
+    }
+
+    /**
      * 根据套餐id查询套餐
      * @param id
      * @return

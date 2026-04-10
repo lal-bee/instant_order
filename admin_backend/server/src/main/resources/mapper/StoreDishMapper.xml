@@ -4,25 +4,132 @@
 <mapper namespace="fun.cyhgraph.mapper.StoreDishMapper">
 
     <insert id="add">
-        insert into store_dish (store_id, dish_id, status, create_user, update_user, create_time, update_time)
-        values (#{storeId}, #{dishId}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})
+        insert into store_dish (store_id, dish_id, status, stock, warning_stock, create_user, update_user, create_time, update_time)
+        values (#{storeId}, #{dishId}, #{status}, #{stock}, #{warningStock}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})
     </insert>
 
-    <select id="getDishIdsByStoreIdAndCategoryId" resultType="java.lang.Integer">
-        select sd.dish_id
+    <insert id="batchInitStockForStore">
+        insert into store_dish (store_id, dish_id, status, stock, warning_stock, create_user, update_user, create_time, update_time)
+        select #{storeId},
+               d.id,
+               ifnull(d.status, 1),
+               #{defaultStock},
+               #{defaultWarningStock},
+               0,
+               0,
+               now(),
+               now()
+        from dish d
+        where (d.dish_scope = 1 or (d.dish_scope is null and d.store_id is null))
+           or ((d.dish_scope = 2 or (d.dish_scope is null and d.store_id is not null)) and d.store_id = #{storeId})
+        on duplicate key update update_time = now(), update_user = 0
+    </insert>
+
+    <insert id="batchInitStockForStoreAndDishIds">
+        insert into store_dish (store_id, dish_id, status, stock, warning_stock, create_user, update_user, create_time, update_time)
+        select #{storeId},
+               d.id,
+               ifnull(d.status, 1),
+               #{defaultStock},
+               #{defaultWarningStock},
+               0,
+               0,
+               now(),
+               now()
+        from dish d
+        where d.id in
+        <foreach collection="dishIds" item="dishId" separator="," open="(" close=")">
+            #{dishId}
+        </foreach>
+          and ((d.dish_scope = 1 or (d.dish_scope is null and d.store_id is null))
+            or ((d.dish_scope = 2 or (d.dish_scope is null and d.store_id is not null)) and d.store_id = #{storeId}))
+        on duplicate key update update_time = now(), update_user = 0
+    </insert>
+
+    <update id="deductStock">
+        update store_dish
+        set stock = stock - #{deductNum}, update_time = now(), update_user = 0
+        where store_id = #{storeId}
+          and dish_id = #{dishId}
+          and status = 1
+          and stock >= #{deductNum}
+    </update>
+
+    <update id="rollbackStock">
+        update store_dish
+        set stock = stock + #{rollbackNum}, update_time = now(), update_user = 0
+        where store_id = #{storeId}
+          and dish_id = #{dishId}
+    </update>
+
+    <update id="updateStock">
+        update store_dish
+        set stock = #{stock},
+            update_time = now(),
+            update_user = 0
+        where store_id = #{storeId}
+          and dish_id = #{dishId}
+    </update>
+
+    <update id="updateWarningStock">
+        update store_dish
+        set warning_stock = #{warningStock},
+            update_time = now(),
+            update_user = 0
+        where store_id = #{storeId}
+          and dish_id = #{dishId}
+    </update>
+
+    <select id="pageQuery" resultType="fun.cyhgraph.vo.StockPageVO">
+        select sd.store_id as storeId,
+               s.name as storeName,
+               sd.dish_id as dishId,
+               d.name as dishName,
+               d.status as dishStatus,
+               sd.status as onShelfStatus,
+               sd.stock as stock,
+               sd.warning_stock as warningStock,
+               case when sd.stock &lt;= sd.warning_stock then 1 else 0 end as warning
         from store_dish sd
-                 left join dish d on sd.dish_id = d.id
-        where sd.store_id = #{storeId}
-          and sd.status = 1
-          and d.category_id = #{categoryId}
-          and d.status = 1
-          and (d.dish_scope = 1 or (d.dish_scope is null and d.store_id is null))
+                 left join dish d on d.id = sd.dish_id
+                 left join store s on s.id = sd.store_id
+        <where>
+            <if test="storeId != null">
+                and sd.store_id = #{storeId}
+            </if>
+            <if test="dishName != null and dishName != ''">
+                and d.name like concat('%', #{dishName}, '%')
+            </if>
+            <if test="warningOnly != null and warningOnly == 1">
+                and sd.stock &lt;= sd.warning_stock
+            </if>
+        </where>
+        order by case when sd.stock &lt;= sd.warning_stock then 0 else 1 end asc, sd.stock asc, sd.store_id asc, sd.dish_id asc
     </select>
 
-    <insert id="upsertStatus">
-        insert into store_dish (store_id, dish_id, status, create_user, update_user, create_time, update_time)
-        values (#{storeId}, #{dishId}, #{status}, 0, 0, now(), now())
-        on duplicate key update status = values(status), update_time = now(), update_user = 0
-    </insert>
+    <select id="warningList" resultType="fun.cyhgraph.vo.StockPageVO">
+        select sd.store_id as storeId,
+               s.name as storeName,
+               sd.dish_id as dishId,
+               d.name as dishName,
+               d.status as dishStatus,
+               sd.status as onShelfStatus,
+               sd.stock as stock,
+               sd.warning_stock as warningStock,
+               1 as warning
+        from store_dish sd
+                 left join dish d on d.id = sd.dish_id
+                 left join store s on s.id = sd.store_id
+        <where>
+            and sd.stock &lt;= sd.warning_stock
+            <if test="storeId != null">
+                and sd.store_id = #{storeId}
+            </if>
+            <if test="dishName != null and dishName != ''">
+                and d.name like concat('%', #{dishName}, '%')
+            </if>
+        </where>
+        order by sd.stock asc, sd.store_id asc, sd.dish_id asc
+    </select>
 
 </mapper>

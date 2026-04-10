@@ -65,7 +65,6 @@ onMounted(() => {
 // 监视搜索框，一变化就根据新的值模糊查询菜品
 // searchKey 是父组件的搜索值，因此使用箭头函数表示指向父级的this
 watch(() => props.searchKey, (value) => {
-  console.log('子组件adddish watch监视到 搜索框输入的值发生变化，新值为： ', value)
   if (value.trim()) {
     getDishForName(value)
   }
@@ -99,9 +98,6 @@ const getDishList = async (id: number) => {
   })
   dishList.value = newArr
   ids.add(id)
-  console.log('allDishList', allDishList.value)
-  console.log('dishList', dishList.value)
-  console.log('ids', ids)
 }
 
 // 根据搜索框的关键词name，模糊查询菜品
@@ -118,20 +114,16 @@ const getDishForName = async (name: string) => {
 // 点击左侧菜品分类，拿到对应分类下的菜品列表，显示在中间栏
 const checkTypeHandle = (ind: number, id: number) => {
   // ind 是当前点击的菜品分类的索引，id 是当前点击的菜品分类的categoryId
-  console.log('点击了左侧菜品分类，看看点了啥', ind, id)
   keyInd.value = ind
   // 先清空（不然还保留上一个页面的数据），再去拿到当前点击的菜品分类下的菜品列表dishList
   // 清空写在getDishList里
   getDishList(id)
-  console.log('看看dishList', dishList.value)
-  console.log('如果是空，长度应该是0', dishList.value.length)
 }
 
 // 使用setup语法糖的话要先引入defineEmits来定义
 const emit = defineEmits(["selectList"])
 // 点击菜品复选框checkbox，将选中的菜品添加到右侧已选菜品列表/从右边已选菜品列表中删除
 const checkedListHandle = (value: [string]) => {
-  console.log('点击了checkbox，看看点了啥', value)
   checkedListAll.value.reverse()
   const list = allDishList.value.filter((item) => {
     let data
@@ -175,12 +167,10 @@ const checkedListHandle = (value: [string]) => {
   // 让父组件知道已选菜品的变化
   emit('selectList', checkedListAll.value)
   checkedListAll.value.reverse()
-  console.log('看看点checkbox后的checkedListAll ', checkedListAll.value)
 }
 
 // 点击右边栏的删除小按钮，删除已选菜品列表中的某个菜品
 const delCheck = (name: any) => {
-  console.log('点击了删除按钮，看看点了啥', name)
   const index = checkedList.value.findIndex((it) => it === name)
   const indexAll = checkedListAll.value.findIndex((it) => it.name === name)
   checkedList.value.splice(index, 1)
@@ -375,3 +365,4 @@ const delCheck = (name: any) => {
   }
 }
 </style>
+

@@ -11,8 +11,7 @@
     <div class="viewport">
       <!-- 未登录或无数据时提示 -->
       <div v-if="categoryList.length === 0" class="empty-tip">
-        <p class="empty-msg">请先登录以加载菜单</p>
-        <button class="btn-login" type="button" @click="goLogin">去登录</button>
+        <p class="empty-msg">暂无可用菜单，请稍后重试</p>
       </div>
       <div v-else class="categories">
         <div class="primary">
@@ -158,7 +157,7 @@ import NavBar from '@/components/NavBar.vue'
 import { getStatusAPI } from '@/api/shop'
 import { getCategoryAPI } from '@/api/category'
 import { getDishListAPI } from '@/api/dish'
-import { getSetmealListAPI } from '@/api/setmeal'
+import { getSetmealListAPI, getSetmealAllAPI } from '@/api/setmeal'
 import { getTableInfoAPI } from '@/api/table'
 import { addToCartAPI, subCartAPI, getCartAPI, cleanCartAPI } from '@/api/cart'
 import { showToast } from '@/utils/toast'
@@ -177,6 +176,8 @@ const visible = ref(false)
 const dialogDish = ref(null)
 const flavors = ref([])
 const chosedflavors = ref([])
+const hotDishList = ref([])
+const setmealRecommendList = ref([])
 const tableContext = reactive({
   tableId: '',
   storeId: '',
@@ -201,13 +202,51 @@ async function getCategoryData() {
   const params = {}
   if (tableContext.storeId) params.storeId = Number(tableContext.storeId)
   const res = await getCategoryAPI(params)
-  categoryList.value = res.data || []
+  const list = res.data || []
+  const merged = []
+  merged.push({ id: '__hot__', name: '热销菜', type: 1, sort: -1, virtual: 'hot' })
+  merged.push({ id: '__setmeal_recommend__', name: '套餐', type: 2, sort: -2, virtual: 'setmeal' })
+  categoryList.value = merged.concat(list)
+}
+
+function dedupeById(list) {
+  const seen = new Set()
+  return (list || []).filter((item) => {
+    if (!item || item.id == null) return false
+    if (seen.has(item.id)) return false
+    seen.add(item.id)
+    return true
+  })
+}
+
+async function loadRecommendations() {
+  try {
+    const dishCategories = categoryList.value.filter((item) => item.type === 1).slice(0, 2)
+    const storeId = tableContext.storeId ? Number(tableContext.storeId) : undefined
+    const dishRequests = dishCategories.map((cat) => getDishListAPI(cat.id, storeId).then((res) => res.data || []).catch(() => []))
+    const dishData = (await Promise.all(dishRequests)).flat()
+    const setmealRes = await getSetmealAllAPI(storeId).catch(() => ({ data: [] }))
+    const setmealData = setmealRes.data || []
+    hotDishList.value = dedupeById(dishData).slice(0, 4)
+    setmealRecommendList.value = dedupeById(setmealData).slice(0, 4)
+  } catch (_) {
+    hotDishList.value = []
+    setmealRecommendList.value = []
+  }
 }
 
 async function getDishOrSetmealList(index) {
   activeIndex.value = index
   const cat = categoryList.value[index]
   if (!cat) return
+  if (cat.virtual === 'hot') {
+    dishList.value = hotDishList.value || []
+    return
+  }
+  if (cat.virtual === 'setmeal') {
+    dishList.value = setmealRecommendList.value || []
+    return
+  }
   if (cat.type === 1) {
     const res = await getDishListAPI(cat.id, tableContext.storeId ? Number(tableContext.storeId) : undefined)
     dishList.value = res.data || []
@@ -226,7 +265,7 @@ async function getCartList() {
 function getCopies(dish) {
   const cat = categoryList.value[activeIndex.value]
   if (!cat) return 0
-  if (cat.sort < 20) {
+  if (cat.type === 1) {
     return cartList.value.find((item) => item.dishId === dish.id)?.number || 0
   }
   return cartList.value.find((item) => item.setmealId === dish.id)?.number || 0
@@ -236,14 +275,9 @@ function goDishDetail(dish) {
   const cat = categoryList.value[activeIndex.value]
   if (!cat) return
   const query = { ...route.query }
-  if (cat.sort < 20) query.dishId = dish.id
+  if (cat.type === 1) query.dishId = dish.id
   else query.setmealId = dish.id
   router.push({ path: '/dish-detail', query })
-}
-
-function goLogin() {
-  const redirect = route.fullPath || '/order'
-  router.push({ path: '/login', query: { redirect } })
 }
 
 function goMyPage() {
@@ -303,7 +337,7 @@ async function addDishAction(item, form) {
     })
   } else {
     const cat = categoryList.value[activeIndex.value]
-    if (cat.sort < 20) await addToCartAPI({ dishId: item.id })
+    if (cat.type === 1) await addToCartAPI({ dishId: item.id })
     else await addToCartAPI({ setmealId: item.id })
   }
   await getCartList()
@@ -318,7 +352,7 @@ async function subDishAction(item, form) {
     })
   } else {
     const cat = categoryList.value[activeIndex.value]
-    if (cat.sort < 20) await subCartAPI({ dishId: item.id })
+    if (cat.type === 1) await subCartAPI({ dishId: item.id })
     else await subCartAPI({ setmealId: item.id })
   }
   await getCartList()
@@ -357,6 +391,7 @@ onMounted(async () => {
   }
   try {
     await getCategoryData()
+    await loadRecommendations()
     if (categoryList.value.length) await getDishOrSetmealList(0)
     await getCartList()
   } catch (e) {
@@ -416,6 +451,7 @@ async function initTableContext() {
   justify-content: flex-end;
 }
 
+
 .btn-my {
   height: 30px;
   padding: 0 14px;
@@ -442,17 +478,9 @@ async function initTableContext() {
   padding: 40px 24px;
 }
 .empty-tip .empty-msg {
-  margin: 0 0 20px;
+  margin: 0;
   font-size: 15px;
   color: #666;
-}
-.empty-tip .btn-login {
-  padding: 10px 32px;
-  font-size: 15px;
-  color: #fff;
-  background: #07c160;
-  border: none;
-  border-radius: 8px;
 }
 
 .categories {

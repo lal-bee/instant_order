@@ -18,8 +18,6 @@ public interface UserCouponMapper {
 
     UserCoupon getById(@Param("id") Integer id);
 
-    UserCoupon getByOrderId(@Param("orderId") Integer orderId);
-
     int countUserReceive(@Param("userId") Integer userId, @Param("couponId") Integer couponId);
 
     int lockCouponForOrder(@Param("userCouponId") Integer userCouponId,
@@ -36,10 +34,6 @@ public interface UserCouponMapper {
 
     int unlockCouponByUserCouponId(@Param("userCouponId") Integer userCouponId,
                                    @Param("updateTime") LocalDateTime updateTime);
-
-    int markCouponUsedByOrderId(@Param("orderId") Integer orderId,
-                                @Param("useTime") LocalDateTime useTime,
-                                @Param("updateTime") LocalDateTime updateTime);
 
     int markCouponUsedByUserCouponId(@Param("userCouponId") Integer userCouponId,
                                      @Param("useTime") LocalDateTime useTime,

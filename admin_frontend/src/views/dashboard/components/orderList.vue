@@ -216,7 +216,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import Empty from '@/components/Empty.vue';
 import {
   getOrderDetailPageAPI,
@@ -230,8 +229,6 @@ import {
 import type { Order, OrderVO } from '@/types/order'
 import { ElMessage } from 'element-plus'
 
-const router = useRouter()
-
 const orderStatics = ref<any>(''); // 订单统计数据
 const orderId = ref<string>(''); // 订单号
 const dialogOrderStatus = ref<number>(0); // 弹窗所需订单状态，用于详情展示字段
@@ -242,7 +239,6 @@ const cancelDialogTitle = ref<string>(''); // 取消，拒绝弹窗标题
 const cancelReason = ref<string>('');
 const remark = ref<string>(''); // 自定义原因
 const diaForm = ref<OrderVO>()
-// const row = ref<any>({});
 const my_row = ref<Order>()
 const isAutoNext = ref<boolean>(false);
 const isSearch = ref<boolean>(false);
@@ -289,7 +285,6 @@ const getOrderListData = async (status: number) => {
   dialogVisible.value = false;
   const params = { page: page.value, pageSize: pageSize.value, status };
   const data = await getOrderDetailPageAPI(params);
-  console.log("拿到订单数据了！", data);
   orderData.value = data.data.data.records;
   counts.value = data.data.data.total;
   if (dialogOrderStatus.value === 2 && status === 2 && isAutoNext.value
@@ -301,12 +296,10 @@ const getOrderListData = async (status: number) => {
 
 // 开始制作
 const orderAccept = async (row: any) => {
-  console.log('开始制作', row);
   orderId.value = row.id;
   dialogOrderStatus.value = row.status;
   const res = await orderAcceptAPI({ id: orderId.value })
   if (res.data.code === 0) {
-    console.log('操作成功')
     orderId.value = ''
     dialogVisible.value = false
     await getOrderListData(status.value)
@@ -361,26 +354,14 @@ const confirmCancel = async () => {
 // 出餐或完成订单
 const deliveryOrComplete = async (status1: number, id: number) => {
   const action = status1 === 3 ? deliveryOrderAPI : completeOrderAPI;
-  const params = { status1, id };
-
-  const { data: res } = await action(params)
+  const { data: res } = await action({ id })
   if (res.code === 0) {
     orderId.value = ''
     dialogVisible.value = false
     ElMessage.success(`${status1 === 3 ? '出餐成功' : '订单完成'}`)
     getOrderListData(status.value)
-  } else {
-    // Handle error
   }
 };
-
-// const goDetail = async (id: any, status: number, row: any) => {
-//   dialogVisible.value = true;
-//   dialogOrderStatus.value = status;
-//   const { data: res } = await queryOrderDetailByIdAPI({ orderId: id });
-//   diaForm.value = res.data;
-//   row.value = row;
-// };
 
 // 打开对话框，查看订单详情
 const goDetail = async (id: any, status: number, row: any) => {
@@ -388,7 +369,6 @@ const goDetail = async (id: any, status: number, row: any) => {
   const { data: res } = await queryOrderDetailByIdAPI({ orderId: id })
   diaForm!.value = res.data
   Object.assign(my_row, row)
-  // router.push('/dashboard')
   dialogVisible.value = true
   dialogOrderStatus.value = status
 }
@@ -414,7 +394,6 @@ const handleCurrentChange = (val: number) => {
 };
 
 onMounted(() => {
-  // console.log('子组件已挂载');
   getOrderListData(status.value);
 });
 
@@ -432,18 +411,6 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
 
-  .btn_box {
-    display: flex;
-    align-items: center;
-    height: 100%;
-
-    .before,
-    .middle,
-    .after {
-      width: 40px;
-      margin: 2px;
-    }
-  }
   .before,
   .middle,
   .after {
@@ -453,12 +420,10 @@ onMounted(() => {
 }
 
 .order-top {
-  // height: 80px;
   border-bottom: 1px solid #e7e6e6;
   padding-bottom: 26px;
   padding-left: 22px;
   padding-right: 22px;
-  // margin: 0 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -561,7 +526,6 @@ onMounted(() => {
         line-height: 32px;
         color: #333;
         margin-right: 30px;
-        // padding: 12px 6px;
       }
 
       span {
@@ -585,7 +549,6 @@ onMounted(() => {
   }
 
   .dish-info {
-    // min-height: 180px;
     display: flex;
     flex-wrap: wrap;
     padding: 20px 40px;
@@ -609,13 +572,6 @@ onMounted(() => {
           margin-right: 51px;
         }
       }
-
-      // .dish-item:nth-child(odd) {
-      //   flex: 60%;
-      // }
-      // .dish-item:nth-child(even) {
-      //   flex: 40%;
-      // }
     }
 
     .dish-label {
@@ -642,7 +598,6 @@ onMounted(() => {
 
 .order-bottom {
   .amount-info {
-    // min-height: 180px;
     display: flex;
     flex-wrap: wrap;
     padding: 20px 40px;
@@ -659,7 +614,6 @@ onMounted(() => {
       flex-wrap: wrap;
       color: #333;
 
-      // height: 65px;
       .dish-amount,
       .package-amount,
       .pay-type {
@@ -712,16 +666,6 @@ onMounted(() => {
     padding-left: 30px;
   }
 
-  // td.operate .cell {
-
-  //   .before,
-  //   .middle,
-  //   .after {
-  //     height: 39px;
-  //     width: 48px;
-  //   }
-  // }
-
   td.operate .cell,
   td.otherOperate .cell {
     display: flex;
@@ -730,3 +674,4 @@ onMounted(() => {
   }
 }
 </style>
+

@@ -72,4 +72,5 @@ public class Order implements Serializable {
     private Long tableId; // 餐桌id
     private String tableNo; // 桌号
     private String storeName; // 门店名称（查询扩展字段）
+    private Integer stockDeducted; // 库存是否已扣减 1是 0否
 }

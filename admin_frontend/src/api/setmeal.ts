@@ -19,7 +19,6 @@ export const addSetmealAPI = (params: any) => {
  * @returns
  */
 export const getSetmealPageListAPI = (params: any) => {
-  console.log('Setmeal-params', params)
   return request({
     url: '/setmeal/page',
     method: 'get',
@@ -58,7 +57,6 @@ export const updateSetmealAPI = (params: any) => {
  * @returns
  */
 export const updateSetmealStatusAPI = (id: number) => {
-  console.log('套餐id', id)
   return request({
     url: `/setmeal/status/${id}`,
     method: 'put'
@@ -77,3 +75,4 @@ export const deleteSetmealsAPI = (ids: string) => {
     params: { ids }
   })
 }
+

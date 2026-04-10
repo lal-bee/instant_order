@@ -1,6 +1,5 @@
 package fun.cyhgraph.controller.admin;
 
-import fun.cyhgraph.dto.StoreMenuConfigDTO;
 import fun.cyhgraph.dto.StoreSpecialDishDTO;
 import fun.cyhgraph.dto.StoreDishStatusDTO;
 import fun.cyhgraph.entity.Category;
@@ -37,12 +36,6 @@ public class StoreMenuController {
     @GetMapping("/categories")
     public Result<List<Category>> getStoreMenuCategoryList() {
         return Result.success(storeMenuService.getStoreMenuCategoryList());
-    }
-
-    @PutMapping("/config")
-    public Result configStoreMenu(@RequestBody StoreMenuConfigDTO storeMenuConfigDTO) {
-        storeMenuService.configStoreMenu(storeMenuConfigDTO);
-        return Result.success();
     }
 
     @PutMapping("/status")

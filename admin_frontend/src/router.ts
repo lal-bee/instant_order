@@ -30,6 +30,12 @@ export const layoutChildrenRoutes: RouteRecordRaw[] = [
     meta: { title: '营销管理 / 优惠券管理', icon: 'Discount', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
   },
   {
+    path: 'user',
+    name: 'user_manage',
+    component: () => import('./views/user/index.vue'),
+    meta: { title: '用户会员管理', icon: 'UserFilled', roles: [RoleEnum.CHAIRMAN] },
+  },
+  {
     path: 'category',
     name: 'category',
     component: () => import('./views/category/index.vue'),
@@ -102,6 +108,12 @@ export const layoutChildrenRoutes: RouteRecordRaw[] = [
     name: 'store_menu',
     component: () => import('./views/store-menu/index.vue'),
     meta: { title: '门店菜单配置', icon: 'Tickets', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
+  },
+  {
+    path: 'stock',
+    name: 'stock',
+    component: () => import('./views/stock/index.vue'),
+    meta: { title: '库存管理', icon: 'DataLine', roles: [RoleEnum.CHAIRMAN, RoleEnum.STORE_MANAGER, RoleEnum.EMPLOYEE] },
   },
   {
     path: 'employee',

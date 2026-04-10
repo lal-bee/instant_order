@@ -21,12 +21,10 @@ type OrderStatics = {
   deliveryInProgress: number
 }
 
-const defaultActivity = ref(0)
 const orderStatics = ref<OrderStatics>()
 const my_row = ref<Order>()
 const isAutoNext = ref(true)
 const isTableOperateBtn = ref(true)
-// const currentPageIndex = ref(0) //记录查看详情数据的index
 const orderId = ref<number>() //订单id
 const input = ref('') //搜索条件的订单号
 const phone = ref('') //搜索条件的手机号
@@ -83,14 +81,12 @@ const activeIndex = ref(0)
 
 // 监视订单数量变化
 watch(orderStatics, (newValue) => {
-  console.log('watch订单数量变化：', newValue)
   changedOrderList[1].num = newValue && newValue.toBeConfirmed
   changedOrderList[2].num = newValue && newValue.confirmed
   changedOrderList[3].num = newValue && newValue.deliveryInProgress
 })
 
 const tabChange = (index: number) => {
-  console.log('tabChange,新的activeIndex：', index)
   activeIndex.value = index
   init(index)
 }
@@ -117,7 +113,6 @@ const init = async (activeIndex: number = 0, search?: boolean) => {
       orderStatus.value = activeIndex
       counts.value = Number(res.data.data.total)
       await getOrderListBy3Status()
-      console.log('获取到3种订单状态数量')
       if (
         dialogOrderStatus.value === 2 &&
         orderStatus.value === 2 &&
@@ -141,10 +136,7 @@ const getOrderListBy3Status = async () => {
   try {
     const res = await getOrderListByAPI()
     if (res.data.code === 0) {
-      console.log('获取订单统计成功')
       orderStatics.value = res.data.data
-      console.log('orderStatics:', orderStatics.value)
-      console.log('changedOrderList:', changedOrderList)
     } else {
       throw new Error(res.data.msg)
     }
@@ -155,14 +147,11 @@ const getOrderListBy3Status = async () => {
 
 // 打开对话框，查看订单详情
 const goDetail = async (id: any, status: number, row?: any) => {
-  console.log('打开对话框，查看订单详情信息', id, status, row)
   orderId.value = id
   try {
     const { data: res } = await queryOrderDetailByIdAPI({ orderId: id })
     diaForm!.value = res.data
     my_row.value = row || { id: route.query.orderId, status: status }
-    // Object.assign(my_row.value, row || { id: route.query.orderId, status: status })
-    console.log('传给你这个my_row', my_row.value)
     if (route.query.orderId) {
       router.push('/order')
     }
@@ -175,13 +164,11 @@ const goDetail = async (id: any, status: number, row?: any) => {
 
 // 开始制作
 const orderAccept = async (row: any) => {
-  console.log('开始制作', row)
   orderId.value = row!.id
   dialogOrderStatus.value = row.status
   try {
     const res = await orderAcceptAPI({ id: orderId.value })
     if (res.data.code === 0) {
-      console.log('操作成功')
       orderId.value = 0
       dialogVisible.value = false
       await init(orderStatus.value)
@@ -196,7 +183,6 @@ const orderAccept = async (row: any) => {
 
 // 打开拒单弹窗
 const orderReject = (row: any) => {
-  console.log('拒单', row)
   cancelDialogVisible.value = true
   orderId.value = row.id
   dialogOrderStatus.value = row.status
@@ -207,7 +193,6 @@ const orderReject = (row: any) => {
 
 // 打开取消订单弹窗
 const cancelOrder = (row: any) => {
-  console.log('取消订单', row)
   cancelDialogVisible.value = true
   orderId.value = row.id
   dialogOrderStatus.value = row.status
@@ -230,7 +215,6 @@ const confirmCancel = async () => {
         cancelReason.value === '自定义原因' ? remark.value : cancelReason.value,
     })
     if (res.data.code === 0) {
-      console.log('操作成功')
       ElMessage.success(`${cancelDialogTitle.value}成功`)
       cancelDialogVisible.value = false
       orderId.value = 0
@@ -250,7 +234,6 @@ const deliveryOrComplete = async (status: number, id: number) => {
   try {
     const res = await (status === 3 ? deliveryOrderAPI : completeOrderAPI)(params)
     if (res.data.code === 0) {
-      console.log('操作成功')
       ElMessage.success(`${status === 3 ? '出餐成功' : '订单完成'}`)
       orderId.value = 0
       dialogVisible.value = false
@@ -305,9 +288,6 @@ const getOrderType = (row: any) => {
 // init不够，还得在mounted里面再执行一遍，获取订单统计才行！
 init(Number(route.query.status) || 0)
 onMounted(async () => {
-  if (route.query.status) {
-    defaultActivity.value = Number(route.query.status)
-  }
   // 获取订单统计数据（3种状态的数量）
   await getOrderListBy3Status()
   // 如果路径中有orderId值，说明是点击右上角消息通知进来的
@@ -602,7 +582,6 @@ onMounted(async () => {
         height: auto;
         min-width: 18px;
         min-height: 18px;
-        // border-radius: 50%;
       }
 
       :deep(.el-badge__content.is-fixed) {
@@ -625,7 +604,6 @@ onMounted(async () => {
 .dashboard {
   &-container {
     margin: 30px;
-    // height: 100%;
     min-height: 700px;
 
     .container {
@@ -634,11 +612,9 @@ onMounted(async () => {
       z-index: 1;
       padding: 30px 28px;
       border-radius: 4px;
-      // min-height: 650px;
       height: calc(100% - 55px);
 
       .tableBar {
-        // display: flex;
         margin-bottom: 20px;
         justify-content: space-between;
 
@@ -730,12 +706,10 @@ onMounted(async () => {
 }
 
 .order-top {
-  // height: 80px;
   border-bottom: 1px solid #e7e6e6;
   padding-bottom: 26px;
   padding-left: 22px;
   padding-right: 22px;
-  // margin: 0 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -839,7 +813,6 @@ onMounted(async () => {
         line-height: 32px;
         color: #333;
         margin-right: 30px;
-        // padding: 12px 6px;
       }
 
       span {
@@ -864,7 +837,6 @@ onMounted(async () => {
   }
 
   .dish-info {
-    // min-height: 180px;
     display: flex;
     flex-wrap: wrap;
     padding: 20px 40px;
@@ -915,7 +887,6 @@ onMounted(async () => {
 
 .order-bottom {
   .amount-info {
-    // min-height: 180px;
     display: flex;
     flex-wrap: wrap;
     padding: 20px 40px;
@@ -932,7 +903,6 @@ onMounted(async () => {
       flex-wrap: wrap;
       color: #333;
 
-      // height: 65px;
       .dish-amount,
       .package-amount,
       .pay-type {
@@ -990,3 +960,4 @@ onMounted(async () => {
   }
 }
 </style>
+

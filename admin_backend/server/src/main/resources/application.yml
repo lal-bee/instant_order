@@ -37,10 +37,6 @@ login-reg:
     user-token-name: Authorization
 
 hanye:
-  wechat:
-    appid: ${hanye.wechat.appid}
-    secret: ${hanye.wechat.secret}
-
   jwt:
     # 设置jwt签名加密时使用的秘钥
     admin-secret-key: cyh_handsome

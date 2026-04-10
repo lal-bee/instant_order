@@ -24,4 +24,5 @@ public class MessageConstant {
     public static final String CONFIRM_PASSWORD_ERROR = "两次密码不一致";
     public static final String USERNAME_ALREADY_EXIST = "用户名已存在";
     public static final String USER_ACCOUNT_LOCKED = "账号已禁用";
+    public static final String DISH_STOCK_NOT_ENOUGH = "菜品库存不足，请刷新后重试";
 }

@@ -6,11 +6,10 @@ import fun.cyhgraph.enumeration.OperationType;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
-import java.util.Map;
 import java.util.List;
+import fun.cyhgraph.vo.StockPageVO;
+import fun.cyhgraph.dto.StockPageQueryDTO;
 
 @Mapper
 public interface StoreDishMapper {
@@ -18,28 +17,27 @@ public interface StoreDishMapper {
     @AutoFill(OperationType.INSERT)
     void add(StoreDish storeDish);
 
-    @Delete("delete from store_dish where store_id = #{storeId}")
-    void deleteByStoreId(Long storeId);
-
-    @Delete("delete from store_dish where store_id = #{storeId} and dish_id = #{dishId}")
-    void deleteByStoreIdAndDishId(@Param("storeId") Long storeId, @Param("dishId") Integer dishId);
-
     @Delete("delete from store_dish where dish_id = #{dishId}")
     void deleteByDishId(Integer dishId);
 
-    @Select("select dish_id from store_dish where store_id = #{storeId} and status = 1")
-    List<Integer> getDishIdsByStoreId(Long storeId);
+    int batchInitStockForStore(@Param("storeId") Long storeId,
+                               @Param("defaultStock") Integer defaultStock,
+                               @Param("defaultWarningStock") Integer defaultWarningStock);
 
-    @Select("select status from store_dish where store_id = #{storeId} and dish_id = #{dishId} limit 1")
-    Integer getStatusByStoreIdAndDishId(@Param("storeId") Long storeId, @Param("dishId") Integer dishId);
+    int batchInitStockForStoreAndDishIds(@Param("storeId") Long storeId,
+                                         @Param("dishIds") List<Integer> dishIds,
+                                         @Param("defaultStock") Integer defaultStock,
+                                         @Param("defaultWarningStock") Integer defaultWarningStock);
 
-    @Select("select dish_id as dishId, status as status from store_dish where store_id = #{storeId}")
-    List<Map<String, Object>> getDishStatusMapByStoreId(Long storeId);
+    int deductStock(@Param("storeId") Long storeId, @Param("dishId") Integer dishId, @Param("deductNum") Integer deductNum);
 
-    @Update("update store_dish set status = #{status} where store_id = #{storeId} and dish_id = #{dishId}")
-    int updateStatus(@Param("storeId") Long storeId, @Param("dishId") Integer dishId, @Param("status") Integer status);
+    int rollbackStock(@Param("storeId") Long storeId, @Param("dishId") Integer dishId, @Param("rollbackNum") Integer rollbackNum);
 
-    int upsertStatus(@Param("storeId") Long storeId, @Param("dishId") Integer dishId, @Param("status") Integer status);
+    List<StockPageVO> pageQuery(StockPageQueryDTO queryDTO);
 
-    List<Integer> getDishIdsByStoreIdAndCategoryId(@Param("storeId") Long storeId, @Param("categoryId") Integer categoryId);
+    List<StockPageVO> warningList(StockPageQueryDTO queryDTO);
+
+    int updateStock(@Param("storeId") Long storeId, @Param("dishId") Integer dishId, @Param("stock") Integer stock);
+
+    int updateWarningStock(@Param("storeId") Long storeId, @Param("dishId") Integer dishId, @Param("warningStock") Integer warningStock);
 }

@@ -19,7 +19,6 @@ export const addDishAPI = (params: any) => {
  * @returns
  */
 export const getDishPageListAPI = (params: any) => {
-  console.log('dish-params', params)
   return request({
     url: '/dish/page',
     method: 'get',
@@ -58,7 +57,6 @@ export const updateDishAPI = (params: any) => {
  * @returns
  */
 export const updateDishStatusAPI = (id: number) => {
-  console.log('发请求啊！', id)
   return request({
     url: `/dish/status/${id}`,
     method: 'put'
@@ -77,4 +75,5 @@ export const deleteDishesAPI = (ids: string) => {
     params: { ids }
   })
 }
+
 

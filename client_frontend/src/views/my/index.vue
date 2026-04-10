@@ -15,6 +15,7 @@
       <div class="phone-name">
         <div class="name">
           <span class="name-text">{{ user.name || '未设置' }}</span>
+          <span v-if="memberInfo.isMember === 1" class="member-tag">{{ memberLevelText(memberInfo.memberLevel) }}</span>
           <span class="gender-tag">{{ user.gender === 0 ? '女士' : '男士' }}</span>
         </div>
         <div class="phone">{{ user.phone || '未设置' }}</div>
@@ -22,6 +23,13 @@
     </div>
 
     <div class="white-box">
+      <div class="menu-row" @click="goMemberCenter">
+        <span class="menu-text">会员中心</span>
+        <div class="menu-right">
+          <span class="menu-extra" v-if="memberInfo.isMember === 1">会员中</span>
+          <span class="arrow">›</span>
+        </div>
+      </div>
       <div class="menu-row" @click="goHistory">
         <span class="menu-text">历史订单</span>
         <span class="arrow">›</span>
@@ -97,6 +105,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getUserInfoAPI } from '@/api/user'
+import { getMemberInfoAPI } from '@/api/member'
 import { getOrderPageAPI, reOrderAPI, urgeOrderAPI } from '@/api/order'
 import { cleanCartAPI } from '@/api/cart'
 import { showToast } from '@/utils/toast'
@@ -121,6 +130,11 @@ const user = reactive({
   gender: 1,
   phone: '未设置',
   pic: '',
+})
+const memberInfo = reactive({
+  isMember: 0,
+  memberLevel: 0,
+  memberExpireTime: '',
 })
 const recentOrders = ref([])
 const recentDTO = ref({ page: 1, pageSize: 6 })
@@ -180,11 +194,29 @@ function loadMoreRecent() {
 function goHistory() {
   router.push('/order-list')
 }
+
+const memberLevelText = (level) => {
+  if (level === 2) return '高级会员'
+  if (level === 1) return '普通会员'
+  return '普通用户'
+}
+
+async function getMemberInfo() {
+  try {
+    const res = await getMemberInfoAPI()
+    memberInfo.isMember = res.data?.isMember ?? 0
+    memberInfo.memberLevel = res.data?.memberLevel ?? 0
+    memberInfo.memberExpireTime = res.data?.memberExpireTime ?? ''
+  } catch (e) {}
+}
 function goUpdateMy() {
   router.push('/update-my')
 }
 function goCouponCenter() {
   router.push('/coupon-center')
+}
+function goMemberCenter() {
+  router.push('/member-center')
 }
 function goMyCoupon() {
   router.push('/my-coupon')
@@ -218,6 +250,7 @@ async function pushOrder(id) {
 
 onMounted(() => {
   getUserInfo()
+  getMemberInfo()
   fetchRecent(false)
 })
 </script>
@@ -320,6 +353,15 @@ onMounted(() => {
   color: #666;
   margin-left: 8px;
 }
+.member-tag {
+  margin-left: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  padding: 0 8px;
+  border-radius: 9px;
+  color: #047857;
+  background: #d1fae5;
+}
 .phone {
   font-size: 14px;
   color: #666;
@@ -345,6 +387,18 @@ onMounted(() => {
 .menu-text {
   font-size: 15px;
   color: #333;
+}
+.menu-right {
+  display: flex;
+  align-items: center;
+}
+.menu-extra {
+  font-size: 12px;
+  color: #047857;
+  background: #d1fae5;
+  border-radius: 10px;
+  padding: 2px 8px;
+  margin-right: 8px;
 }
 .arrow {
   font-size: 18px;

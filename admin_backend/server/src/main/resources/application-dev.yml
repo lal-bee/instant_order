@@ -9,15 +9,3 @@ hanye:
     port: 6379
     password: 123456
     database: 1
-  wechat:
-    # 下面这两句改成自己的，不然小程序登不上！
-    appid: wx86b445b4e40eb6df
-    secret: dd4af9346c05189b52f627b61cce7afb
-    # 别人的文件，由于没企业商户号，这里只是摆设
-    mchid: 1561414331
-    mchSerialNo: 4B3B3DC35414AD50B1B755BAF8DE9CC7CF407606
-    privateKeyFilePath: C:\software\apiclient_key.pem
-    apiV3Key: CZBK51236435wxpay435434323FFDuv3
-    weChatPayCertFilePath: C:\software\wechatpay_166D96F876F45C7D07CE98952A96EC980368ACFC.pem
-    notifyUrl: https://9ea0754.r19.cpolar.top/notify/paySuccess
-    refundNotifyUrl: https://9ea0754.r19.cpolar.top/notify/refundSuccess

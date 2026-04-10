@@ -7,13 +7,6 @@ export const getStoreListAPI = () => {
   })
 }
 
-export const getStoreByIdAPI = (id: number) => {
-  return request({
-    url: `/store/${id}`,
-    method: 'get',
-  })
-}
-
 export const addStoreAPI = (params: any) => {
   return request({
     url: '/store',

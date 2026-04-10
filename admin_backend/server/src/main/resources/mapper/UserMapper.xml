@@ -28,6 +28,89 @@
         where id = #{id}
     </update>
 
+    <select id="pageMemberQuery" resultType="fun.cyhgraph.entity.User">
+        select id, username, name, phone, status, is_member, member_level, member_expire_time, create_time, update_time
+        from user
+        <where>
+            <if test="name != null and name != ''">
+                and (name like concat('%', #{name}, '%')
+                or username like concat('%', #{name}, '%'))
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone like concat('%', #{phone}, '%')
+            </if>
+            <if test="memberStatus != null and memberStatus == 1">
+                and is_member = 1
+                and member_level &gt; 0
+                and (member_expire_time is null or member_expire_time &gt; #{now})
+            </if>
+            <if test="memberStatus != null and memberStatus == 0">
+                and (
+                is_member is null
+                or is_member = 0
+                or member_level is null
+                or member_level &lt;= 0
+                or (member_expire_time is not null and member_expire_time &lt;= #{now})
+                )
+            </if>
+            <if test="memberStatus != null and memberStatus == 2">
+                and is_member = 1
+                and member_level &gt; 0
+                and member_expire_time is not null
+                and member_expire_time &lt;= #{now}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="pageAdminUser" resultType="fun.cyhgraph.entity.User">
+        select id, username, name, phone, gender, status, is_member, member_level, member_expire_time, create_time, update_time
+        from user
+        <where>
+            <if test="query != null and query.keyword != null and query.keyword != ''">
+                and (name like concat('%', #{query.keyword}, '%')
+                or username like concat('%', #{query.keyword}, '%'))
+            </if>
+            <if test="query != null and query.phone != null and query.phone != ''">
+                and phone like concat('%', #{query.phone}, '%')
+            </if>
+            <if test="query != null and query.status != null">
+                and status = #{query.status}
+            </if>
+            <if test="query != null and query.isMember != null and query.isMember == 1">
+                and is_member = 1
+                and member_level &gt; 0
+                and (member_expire_time is null or member_expire_time &gt; #{now})
+            </if>
+            <if test="query != null and query.isMember != null and query.isMember == 0">
+                and (
+                is_member is null
+                or is_member = 0
+                or member_level is null
+                or member_level &lt;= 0
+                or (member_expire_time is not null and member_expire_time &lt;= #{now})
+                )
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <update id="updateMemberInfo">
+        update user
+        set is_member = #{isMember},
+            member_level = #{memberLevel},
+            member_expire_time = #{memberExpireTime},
+            update_time = #{updateTime}
+        where id = #{userId}
+    </update>
+
+    <update id="updateUserStatus">
+        update user
+        set status = #{status},
+            update_time = #{updateTime}
+        where id = #{userId}
+    </update>
+
     <select id="countByMap" resultType="java.lang.Integer">
         select count(id) from user
         <where>

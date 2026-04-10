@@ -3,6 +3,7 @@
  */
 import axios from 'axios'
 import { showToast } from '@/utils/toast'
+import { buildLoginRouteQuery } from '@/utils/url'
 
 // 开发环境用空 baseURL，走 devServer 代理到后端，避免跨域；生产环境用环境变量或默认 8081
 const baseURL = process.env.NODE_ENV === 'development'
@@ -46,8 +47,11 @@ request.interceptors.response.use(
       } catch (e) {}
       showToast('请先登录')
       const current = window.location.pathname + (window.location.search || '')
-      if (!window.location.pathname.startsWith('/login')) {
-        window.location.replace(`/login?redirect=${encodeURIComponent(current)}`)
+      const isAuthPage = window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register')
+      if (!isAuthPage) {
+        const query = buildLoginRouteQuery({ redirect: current })
+        const search = new URLSearchParams(query).toString()
+        window.location.replace(search ? `/login?${search}` : '/login')
       }
       return Promise.reject(err)
     }

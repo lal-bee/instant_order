@@ -20,19 +20,26 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { registerAPI } from '@/api/login'
+import { registerAPI, loginAPI } from '@/api/login'
+import { useUserStore } from '@/stores/user'
 import { showToast } from '@/utils/toast'
+import { buildLoginRouteQuery, resolveRedirectPath, persistTableIdFromQuery } from '@/utils/url'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 const loading = ref(false)
 const form = reactive({
   username: '',
   password: '',
   confirmPassword: '',
   nickname: '',
+})
+
+onMounted(() => {
+  persistTableIdFromQuery(route.query)
 })
 
 async function handleRegister() {
@@ -48,9 +55,28 @@ async function handleRegister() {
       confirmPassword: form.confirmPassword,
       nickname: form.nickname,
     })
+    try {
+      const loginRes = await loginAPI({
+        username: form.username,
+        password: form.password,
+      })
+      const profile = loginRes.data
+      if (profile && profile.token) {
+        userStore.setProfile(profile)
+        showToast('注册成功')
+        const redirect = resolveRedirectPath(route.query.redirect, '/')
+        router.replace(redirect)
+        return
+      }
+    } catch (_) {}
     showToast('注册成功，请登录')
-    const query = { username: form.username }
-    if (route.query.redirect) query.redirect = route.query.redirect
+    const query = {
+      ...buildLoginRouteQuery({
+        tableId: route.query.tableId,
+        redirect: route.query.redirect,
+      }),
+      username: form.username,
+    }
     router.replace({ path: '/login', query })
   } catch (e) {
     showToast(e?.message || '注册失败')
@@ -60,8 +86,10 @@ async function handleRegister() {
 }
 
 function goLogin() {
-  const query = {}
-  if (route.query.redirect) query.redirect = route.query.redirect
+  const query = buildLoginRouteQuery({
+    tableId: route.query.tableId,
+    redirect: route.query.redirect,
+  })
   router.replace({ path: '/login', query })
 }
 </script>

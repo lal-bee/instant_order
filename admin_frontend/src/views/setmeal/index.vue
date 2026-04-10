@@ -60,16 +60,11 @@ const canOperate = computed(() => isChairman(userInfoStore.userInfo?.role))
 // 页面初始化
 const init = async () => {
   const { data: res_category } = await getCategoryPageListAPI({ page: 1, pageSize: 100, type: 2 })
-  console.log('分类列表')
-  console.log(res_category.data)
   categoryList.value = res_category.data.records
-  console.log('categoryList: ', categoryList.value)
 }
 // 刷新页面数据
 const showPageList = async () => {
   const { data: res } = await getSetmealPageListAPI(pageData)
-  console.log('套餐列表')
-  console.log(res.data)
   setmealList.value = res.data.records
   total.value = res.data.total
 }
@@ -94,14 +89,11 @@ const multiSelection = ref<setmeal[]>([])
 
 const handleSelectionChange = (val: setmeal[]) => {
   multiSelection.value = val
-  console.log('value', val)
-  console.log('multiSelection.value', multiSelection.value)
 }
 
 // 新增和修改套餐都是同一个页面，不过要根据路径传参的方式来区分
 const router = useRouter()
 const to_add_update = (row?: any) => {
-  console.log('看有没有传过来，来判断要add还是update', row)
   if (row && row.id) {
     router.push({
       path: '/setmeal/add',
@@ -114,8 +106,6 @@ const to_add_update = (row?: any) => {
 
 // 修改套餐状态
 const change_btn = async (row: any) => {
-  console.log('要修改的行数据')
-  console.log(row)
   await updateSetmealStatusAPI(row.id)
   // 修改后刷新页面，更新数据
   showPageList()
@@ -127,8 +117,6 @@ const change_btn = async (row: any) => {
 
 // 删除套餐
 const deleteBatch = (row?: any) => {
-  console.log('要删除的行数据')
-  console.log(row)
   ElMessageBox.confirm(
     '该操作会永久删除套餐，是否继续？',
     'Warning',
@@ -141,7 +129,6 @@ const deleteBatch = (row?: any) => {
     .then(async () => {
       // 1. 没传入行数据，批量删除
       if (row == undefined) {
-        console.log(multiSelection.value)
         if (multiSelection.value.length == 0) {
           ElMessage({
             type: 'warning',
@@ -155,14 +142,11 @@ const deleteBatch = (row?: any) => {
           ids.push(item.id)
         })
         ids = ids.join(',')
-        console.log('ids', ids)
         let res = await deleteSetmealsAPI(ids)
         if (res.data.code != 0) return
       }
       // 2. 传入行数据，单个删除
       else {
-        console.log('id包装成数组，然后调用批量删除接口')
-        console.log(row.id)
         let res = await deleteSetmealsAPI(row.id)
         if (res.data.code != 0) return
       }
@@ -305,3 +289,4 @@ img {
   margin-left: 900px;
 }
 </style>
+

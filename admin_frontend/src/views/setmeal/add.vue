@@ -9,7 +9,6 @@ import { ElMessage } from 'element-plus'
 // ------ 配置 ------
 const dialogVisible = ref(false)  // 添加菜品弹窗是否显示
 const formLabelWidth = '70px'    // 表单label宽度
-// const actionType = ref('add')  // 当前操作类型，add为新增，update为修改更新
 // 直接看有没有query.id就行，有的话就是update，没有就是add
 
 // ------ 数据 ------
@@ -76,22 +75,15 @@ const init = async () => {
   // 1. 获取套餐分类，等下套餐选择分类时有个下拉框，要展示所有套餐的分类
   // 由于复用分页查询的API，这里不需要分页且数据量较少，所以pageSize设置为100
   const { data: res } = await getCategoryPageListAPI({ page: 1, pageSize: 100, type: 2 })
-  console.log('分类列表')
-  console.log(res.data)
   categoryList.value = res.data.records
-  console.log('categoryList: ', categoryList.value)
   // 2. 由于当前页面可能是add也可能是update，所以要根据路由参数来判断是否需要dishTable等数据的初始化
   if (route.query.id !== undefined) {
-    console.log('来到修改套餐页面update, 套餐id为', route.query.id as string)
     form.id = route.query.id ? parseInt(route.query.id as string) : 0
     let setmeal = await getSetmealByIdAPI(form.id)
-    console.log(setmeal)
     Object.assign(form, setmeal.data.data)
-    console.log(form)
     // 顺便把form里面的setmealDishes赋值给dishTable，用于回显
     dishTable.value = form.setmealDishes
   } else {
-    console.log('来到新增套餐页面add')
   }
 }
 
@@ -110,12 +102,10 @@ const chooseImg = () => {
 // 在文件管理器中选择图片后触发的改变事件：预览
 const onFileChange1 = (e: Event) => {
   // 获取用户选择的文件列表（伪数组）
-  console.log(e)
   const target = e.target as HTMLInputElement
   const files = target.files;
   if (files && files.length > 0) {
     // 选择了图片
-    console.log(files[0])
     // 文件 -> base64字符串  (可以发给后台)
     // 1. 创建 FileReader 对象
     const fr = new FileReader()
@@ -125,8 +115,6 @@ const onFileChange1 = (e: Event) => {
     fr.onload = () => {
       // 4. 通过 e.target.result 获取到读取的结果，值是字符串（base64 格式的字符串）
       form.pic = fr.result as string
-      console.log('avatar')
-      console.log(form.pic)
     }
   }
 }
@@ -152,16 +140,11 @@ const delDishHandle = (index: any) => {
 
 // 获取添加菜品数据 - 确定加菜倒序展示
 const getSelectList = (value: any) => {
-  console.log('拿到子组件emit过来的checkedList?', value)
   selectList = [...value].reverse()
 }
 
 // 打开添加菜品对话框，初始化时清空搜索框残留数据
-const openAddDish = (st: string) => {
-  console.log('打开添加菜品对话框，初始化时清空搜索框残留数据')
-  console.log('打开的状态st ', st)
-  console.log('动态的selectList ', selectList)
-  console.log('动态的dishTable ', dishTable.value)
+const openAddDish = () => {
   searchKey.value = ''
   // 同时要将外面的dishTable回显到dialog中，即将dishTable赋值给selectList
   selectList = JSON.parse(JSON.stringify(dishTable.value))
@@ -175,32 +158,22 @@ const handleClose = () => {
 }
 // 确认添加菜品，退出对话框，将选中的菜品列表selectList赋值给dishTable
 const addTableList = () => {
-  console.log('添加菜品之前，到底有没有selectList？', selectList)
   dishTable.value = JSON.parse(JSON.stringify(selectList))
   // 添加菜品，刚开始所有份数都默认为一份，且只能最后在外部table修改，dialog中退出后，之前设置的分数会都重置为1
   dishTable.value.forEach((n: any) => {
     n.copies = 1
   })
   dialogVisible.value = false
-  console.log('dishTable', dishTable.value)
 }
 
 // 添加套餐信息后提交
 const submit = async (keep: any) => {
-  console.log('keep,为空就是新增', keep)
-  console.log('add提交表单，需要先将dishTable赋值给form.setmealDishes')
-  console.log('dishTable', dishTable.value)
-  console.log('selectList', selectList)
-  console.log('form', form)
-  console.log('开始进行赋值')
   form.setmealDishes = dishTable.value.map((obj: any) => ({
     copies: obj.copies,
     dishId: obj.dishId,
     name: obj.name,
     price: obj.price
   }))
-  console.log('赋值后的form.setmealDishes', form.setmealDishes)
-  console.log('form', form)
   const valid = await addRef.value.validate()
   if (valid) {
     // 输入合法性校验成功后，需要进行逻辑校验
@@ -212,15 +185,11 @@ const submit = async (keep: any) => {
       })
       return false
     }
-    console.log('submit')
-    console.log(form)
     // --- 处理完毕，开始提交 ---
     // 情况1：无路径参数，form.id保持默认值0，新增套餐
     if (form.id === 0) {
-      console.log('新增套餐')
       const res = await addSetmealAPI(form)
       if (res.data.code !== 0) {
-        console.log('新增套餐失败！')
         return false
       }
       // 然后进行 消息提示
@@ -250,10 +219,8 @@ const submit = async (keep: any) => {
     }
     // 情况2：有路径参数，修改套餐
     else {
-      console.log('修改套餐')
       const res = await updateSetmealAPI(form)
       if (res.data.code !== 0) {
-        console.log('修改套餐失败！')
         return false
       }
       ElMessage({
@@ -265,7 +232,6 @@ const submit = async (keep: any) => {
       })
     }
   } else {
-    console.log('form not valid!')
     return false
   }
 }
@@ -312,10 +278,10 @@ const submit = async (keep: any) => {
       <el-form-item label="菜品选择:">
         <div class="addDish">
           <!-- 当前没选菜品，就只展示添加菜品按钮，否则在下方要多一个已选菜品的表格 -->
-          <span v-if="dishTable.length == 0" class="addBut" @click="openAddDish('new')">
+          <span v-if="dishTable.length == 0" class="addBut" @click="openAddDish()">
             + 添加菜品</span>
           <div v-if="dishTable.length != 0" class="content">
-            <div class="addBut" style="margin-bottom: 20px" @click="openAddDish('change')">
+            <div class="addBut" style="margin-bottom: 20px" @click="openAddDish()">
               + 添加菜品
             </div>
             <div class="table">
@@ -459,4 +425,5 @@ img {
   }
 }
 </style>
+
 

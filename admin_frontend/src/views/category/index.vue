@@ -49,9 +49,6 @@ const init = async () => {
   // 参数解构再传进去，不用传total
   const { data: res } = await getCategoryPageListAPI
     ({ name: pageData.name, type: pageData.type, page: pageData.page, pageSize: pageData.pageSize })
-  console.log(res)
-  console.log('分类列表')
-  console.log(res.data)
   categoryList.value = res.data.records
   pageData.total = res.data.total
 }
@@ -74,8 +71,6 @@ const handleSizeChange = (val: number) => {
 // 修改分类(路径传参，到update页面后，根据id查询分类信息，回显到表单中)
 const router = useRouter()
 const update_btn = (row: any) => {
-  console.log('要修改的行数据')
-  console.log(row)
   router.push({
     name: 'category_update',
     query: {
@@ -86,8 +81,6 @@ const update_btn = (row: any) => {
 
 // 修改分类状态
 const change_btn = async (row: any) => {
-  console.log('要修改的行数据')
-  console.log(row)
   await updateCategoryStatusAPI(row.id)
   // 修改后刷新页面，更新数据
   init()
@@ -99,8 +92,6 @@ const change_btn = async (row: any) => {
 
 // 删除分类
 const delete_btn = (row: any) => {
-  console.log('要删除的行数据')
-  console.log(row)
   ElMessageBox.confirm(
     '该操作会永久删除分类，是否继续？',
     'Warning',
@@ -111,8 +102,6 @@ const delete_btn = (row: any) => {
     }
   )
     .then(async () => {
-      console.log('要删除的行数据')
-      console.log(row)
       await deleteCategoryAPI(row.id)
       // 删除后刷新页面，更新数据
       init()
@@ -237,3 +226,4 @@ img {
   margin-left: 900px;
 }
 </style>
+

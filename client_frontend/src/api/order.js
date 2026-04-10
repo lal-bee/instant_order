@@ -23,16 +23,6 @@ export function payOrderAPI(data) {
 }
 
 /**
- * 未支付订单数量
- */
-export function getUnPayOrderAPI() {
-  return request({
-    method: 'GET',
-    url: '/user/order/unPayOrderCount',
-  })
-}
-
-/**
  * 根据订单 id 获取订单详情
  */
 export function getOrderAPI(id) {

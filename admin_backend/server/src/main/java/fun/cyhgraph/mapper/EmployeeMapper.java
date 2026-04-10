@@ -49,8 +49,5 @@ public interface EmployeeMapper {
     @AutoFill(value = OperationType.UPDATE)
     void updatePwd(Employee employee);
 
-    @Select("select * from employee where store_id = #{storeId}")
-    List<Employee> getByStoreId(Long storeId);
-
     List<Employee> getManagerOptions(@Param("enabledOnly") Boolean enabledOnly);
 }

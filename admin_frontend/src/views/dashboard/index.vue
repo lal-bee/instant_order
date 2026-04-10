@@ -268,7 +268,6 @@ li {
     .num {
       font-weight: Bold;
       font-size: 28px;
-      // line-height: 34px;
       float: right;
 
       a {
@@ -327,7 +326,6 @@ li {
     right: 2px;
     width: 18px;
     height: 18px;
-    font-size: 10px;
     line-height: 16px;
     font-size: 10px;
     border-radius: 50%;

@@ -5,6 +5,7 @@ import fun.cyhgraph.dto.GoodsSalesDTO;
 import fun.cyhgraph.dto.OrderPageDTO;
 import fun.cyhgraph.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
@@ -51,6 +52,11 @@ public interface OrderMapper {
      */
     @Select("select * from orders where status = #{status} and order_time < #{orderTime}")
     List<Order> getByStatusAndOrderTimeLT(Integer status, LocalDateTime orderTime);
+
+    @Update("update orders set stock_deducted = #{targetFlag} where id = #{orderId} and stock_deducted = #{expectedFlag}")
+    Integer markStockDeducted(@Param("orderId") Integer orderId,
+                              @Param("targetFlag") Integer targetFlag,
+                              @Param("expectedFlag") Integer expectedFlag);
 
     Double sumByMap(Map map);
 

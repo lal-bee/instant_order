@@ -1,6 +1,5 @@
 package fun.cyhgraph.service.serviceImpl;
 
-import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import fun.cyhgraph.constant.MessageConstant;
@@ -13,6 +12,7 @@ import fun.cyhgraph.exception.ShoppingCartBusinessException;
 import fun.cyhgraph.mapper.*;
 import fun.cyhgraph.result.PageResult;
 import fun.cyhgraph.service.OrderService;
+import fun.cyhgraph.service.StockService;
 import fun.cyhgraph.service.TableInfoService;
 import fun.cyhgraph.service.UserCouponService;
 import fun.cyhgraph.vo.OrderPaymentVO;
@@ -21,7 +21,6 @@ import fun.cyhgraph.vo.OrderSubmitVO;
 import fun.cyhgraph.vo.OrderVO;
 import fun.cyhgraph.vo.UserTableVO;
 import fun.cyhgraph.vo.coupon.CouponLockResultVO;
-import fun.cyhgraph.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 @Service
 @Slf4j
@@ -52,13 +52,13 @@ public class OrderServiceImpl implements OrderService {
     private UserMapper userMapper;
     private Order order;
     @Autowired
-    private WebSocketServer webSocketServer;
-    @Autowired
     private RedisTemplate redisTemplate;
     @Autowired
     private TableInfoService tableInfoService;
     @Autowired
     private UserCouponService userCouponService;
+    @Autowired
+    private StockService stockService;
 
     private static final String SCAN_PARAMS_KEY_PREFIX = "scan_params:user:";
 
@@ -98,6 +98,8 @@ public class OrderServiceImpl implements OrderService {
         if (cartList == null || cartList.isEmpty()) {
             throw new ShoppingCartBusinessException(MessageConstant.CART_IS_NULL);
         }
+        Map<Integer, Integer> dishCountMap = buildDishCountMap(cartList);
+        stockService.checkAndDeductForOrder(storeId, dishCountMap);
         // 3、构建订单数据
         Order order = new Order();
         BeanUtils.copyProperties(orderSubmitDTO, order);
@@ -127,6 +129,7 @@ public class OrderServiceImpl implements OrderService {
         order.setAmount(couponLock.getPayAmount());
         order.setCouponId(couponLock.getCouponId());
         order.setUserCouponId(couponLock.getUserCouponId());
+        order.setStockDeducted(dishCountMap.isEmpty() ? 0 : 1);
         this.order = order;
         // 4、向订单表插入1条数据
         orderMapper.insert(order);
@@ -243,6 +246,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason("用户取消");
         order.setCancelTime(LocalDateTime.now());
         orderMapper.update(order);
+        stockService.rollbackForOrder(ordersDB.getId());
         userCouponService.releaseLockedCoupon(ordersDB);
     }
 
@@ -256,14 +260,6 @@ public class OrderServiceImpl implements OrderService {
         // 1、先拿到这个订单id的所有菜品
         List<OrderDetail> detailList = orderDetailMapper.getById(id);
         // 2、将订单详情对象转换为购物车对象
-//        List<Cart> cartList = new ArrayList<>();
-//        for (OrderDetail orderDetail : detailList){
-//            Cart cart = new Cart();
-//            BeanUtils.copyProperties(orderDetail, cart, "id");
-//            cart.setUserId(userId);
-//            cart.setCreateTime(LocalDateTime.now());
-//            cartList.add(cart);
-//        }
         List<Cart> cartList = detailList.stream().map(x -> {
             Cart cart = new Cart();
             // 将原订单详情里面的菜品信息重新复制到购物车对象中
@@ -303,14 +299,6 @@ public class OrderServiceImpl implements OrderService {
         LocalDateTime checkOutTime = LocalDateTime.now();
         orderMapper.updateStatus(OrderStatus, OrderPaidStatus, checkOutTime, order.getId());
         userCouponService.markCouponUsed(order);
-
-        Map map = new HashMap();
-        map.put("type", 1);
-        map.put("orderId", order.getId());
-        map.put("content", "订单号：" + order.getNumber());
-        String json = JSON.toJSONString(map);
-        log.info("发给商家端啊！：{}", map);
-        webSocketServer.sendToAllClient(json);
 
         return vo;
     }
@@ -383,6 +371,7 @@ public class OrderServiceImpl implements OrderService {
         order.setRejectionReason(orderRejectionDTO.getRejectionReason());
         order.setCancelTime(LocalDateTime.now());
         orderMapper.update(order);
+        stockService.rollbackForOrder(orderDB.getId());
         userCouponService.releaseLockedCoupon(orderDB);
     }
 
@@ -395,6 +384,9 @@ public class OrderServiceImpl implements OrderService {
     public void cancel(OrderCancelDTO orderCancelDTO) {
         Integer orderId = orderCancelDTO.getId();
         Order orderDB = orderMapper.getById(orderId);
+        if (orderDB == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
         Order order = new Order();
         // 取消订单需要退款，根据订单id更新订单状态、取消原因、取消时间
         order.setId(orderDB.getId());
@@ -404,6 +396,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason(orderCancelDTO.getCancelReason());
         order.setCancelTime(LocalDateTime.now());
         orderMapper.update(order);
+        stockService.rollbackForOrder(orderDB.getId());
         userCouponService.releaseLockedCoupon(orderDB);
     }
 
@@ -451,14 +444,7 @@ public class OrderServiceImpl implements OrderService {
         if (orderDB == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
-        // 通过websocket向客户端浏览器推送消息 type orderId content
-        Map map = new HashMap();
-        map.put("type", 2); // 消息类型，2表示客户催单（1表示来单提醒）
-        map.put("orderId", id);
-        map.put("content", "订单号：" + orderDB.getNumber());
-        String json = JSON.toJSONString(map);
-        log.info("发给商家端啊！：{}", map);
-        webSocketServer.sendToAllClient(json);
+        log.info("用户催单，订单号：{}", orderDB.getNumber());
     }
 
     /**
@@ -501,6 +487,17 @@ public class OrderServiceImpl implements OrderService {
         }).collect(Collectors.toList());
         // 将该订单对应的所有菜品信息拼接在一起
         return String.join("", orderDishList);
+    }
+
+    private Map<Integer, Integer> buildDishCountMap(List<Cart> cartList) {
+        Map<Integer, Integer> dishCountMap = new LinkedHashMap<>();
+        for (Cart cart : cartList) {
+            if (cart.getDishId() == null || cart.getNumber() == null || cart.getNumber() <= 0) {
+                continue;
+            }
+            dishCountMap.merge(cart.getDishId(), cart.getNumber(), Integer::sum);
+        }
+        return dishCountMap;
     }
 
 }

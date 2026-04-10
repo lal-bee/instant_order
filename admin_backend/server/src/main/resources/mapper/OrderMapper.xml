@@ -8,11 +8,11 @@
         insert into orders (number, status, user_id, order_time, checkout_time, pay_method, pay_status,
                             amount, origin_amount, coupon_amount, coupon_id, user_coupon_id,
                             remark, phone, address, user_name, consignee, cancel_reason, rejection_reason,
-                            cancel_time, tableware_number, tableware_status, store_id, table_id, table_no)
+                            cancel_time, tableware_number, tableware_status, store_id, table_id, table_no, stock_deducted)
         VALUES (#{number}, #{status}, #{userId}, #{orderTime}, #{checkoutTime}, #{payMethod},
                 #{payStatus}, #{amount}, #{originAmount}, #{couponAmount}, #{couponId}, #{userCouponId},
                 #{remark}, #{phone}, #{address}, #{userName}, #{consignee}, #{cancelReason},
-                #{rejectionReason}, #{cancelTime}, #{tablewareNumber}, #{tablewareStatus}, #{storeId}, #{tableId}, #{tableNo})
+                #{rejectionReason}, #{cancelTime}, #{tablewareNumber}, #{tablewareStatus}, #{storeId}, #{tableId}, #{tableNo}, #{stockDeducted})
     </insert>
 
     <update id="update">
@@ -46,7 +46,10 @@
                 table_id = #{tableId},
             </if>
             <if test="tableNo != null and tableNo != ''">
-                table_no = #{tableNo}
+                table_no = #{tableNo},
+            </if>
+            <if test="stockDeducted != null">
+                stock_deducted = #{stockDeducted}
             </if>
         </set>
         where id = #{id}

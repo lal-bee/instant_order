@@ -1,11 +1,9 @@
 <template>
   <div class="page-login">
     <div class="viewport">
-      <div class="logo">
-        <img src="/images/login.png" alt="扫码点餐" />
-      </div>
       <div class="login-card">
         <h2 class="title">账号登录</h2>
+        <div v-if="tableTip" class="table-tip">当前桌号：{{ tableTip }}，请登录后继续点餐</div>
         <input v-model.trim="form.username" class="input" type="text" maxlength="50" placeholder="请输入用户名" />
         <input v-model="form.password" class="input" type="password" maxlength="50" placeholder="请输入密码" />
         <button class="button" type="button" :disabled="loading" @click="handleLogin">
@@ -22,11 +20,18 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { loginAPI } from '@/api/login'
 import { showToast } from '@/utils/toast'
+import {
+  getTableId,
+  getTableNo,
+  buildRegisterRouteQuery,
+  resolveRedirectPath,
+  persistTableIdFromQuery,
+} from '@/utils/url'
 
 const router = useRouter()
 const route = useRoute()
@@ -36,8 +41,17 @@ const form = reactive({
   username: '',
   password: '',
 })
+const tableTip = computed(() => {
+  const tableNo = getTableNo()
+  if (tableNo) return `${tableNo}号桌`
+  const tableIdFromQuery = typeof route.query.tableId === 'string' ? route.query.tableId : ''
+  const tableId = tableIdFromQuery || getTableId()
+  if (!tableId) return ''
+  return `${tableId}号桌`
+})
 
 onMounted(() => {
+  persistTableIdFromQuery(route.query)
   const q = route.query.username
   if (typeof q === 'string') form.username = q
 })
@@ -55,12 +69,8 @@ async function handleLogin() {
     if (profile && profile.token) {
       userStore.setProfile(profile)
       showToast('登录成功')
-      const redirect = route.query.redirect
-      if (redirect && typeof redirect === 'string' && redirect.startsWith('/')) {
-        router.replace(redirect)
-      } else {
-        router.replace('/my')
-      }
+      const redirect = resolveRedirectPath(route.query.redirect, '/')
+      router.replace(redirect)
     } else {
       showToast('登录失败')
     }
@@ -72,8 +82,10 @@ async function handleLogin() {
 }
 
 function goRegister() {
-  const query = {}
-  if (route.query.redirect) query.redirect = route.query.redirect
+  const query = buildRegisterRouteQuery({
+    tableId: route.query.tableId,
+    redirect: route.query.redirect,
+  })
   router.push({ path: '/register', query })
 }
 </script>
@@ -89,23 +101,10 @@ function goRegister() {
 .viewport {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   min-height: 100vh;
   padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(20px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
-}
-
-.logo {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-top: 10vh;
-}
-
-.logo img {
-  width: clamp(96px, 30vw, 128px);
-  height: clamp(96px, 30vw, 128px);
-  display: block;
 }
 
 .login-card {
@@ -119,6 +118,16 @@ function goRegister() {
   margin: 0 0 14px;
   font-size: 18px;
   color: #333;
+}
+
+.table-tip {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #10B981;
+  color: #065f46;
+  font-size: 13px;
 }
 
 .input {

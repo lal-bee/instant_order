@@ -39,8 +39,6 @@ const submit = async () => {
   try {
     const valid = await updateRef.value.validate();
     if (valid) {
-      console.log('submit')
-      console.log(form)
       // 在这里执行表单提交操作，比如调用updateUser(form)方法等
       const res = await updateCategoryAPI(form)
       if (res.data.code !== 0) {
@@ -56,7 +54,6 @@ const submit = async () => {
         path: '/category',
       })
     } else {
-      console.log('form not valid!');
       return false;
     }
   } catch (error) {
@@ -71,18 +68,13 @@ const cancel = () => {
 }
 
 const init = async () => {
-  console.log(route.query)
   if (route.query) {
     id.value = route.query.id || 0
     form.id = id.value
     let category = await getCategoryByIdAPI(id.value)
-    console.log(category)
     Object.assign(form, category.data.data)
-    console.log(form)
   } else {
-    console.log('没有id')
   }
-  console.log(id)
 }
 
 init()
@@ -140,4 +132,5 @@ img {
   margin: 30px 0 0 200px;
 }
 </style>
+
 

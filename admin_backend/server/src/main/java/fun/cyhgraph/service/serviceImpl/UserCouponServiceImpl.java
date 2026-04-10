@@ -5,12 +5,11 @@ import fun.cyhgraph.context.BaseContext;
 import fun.cyhgraph.dto.coupon.UserCouponAvailableQueryDTO;
 import fun.cyhgraph.entity.Coupon;
 import fun.cyhgraph.entity.Order;
-import fun.cyhgraph.entity.User;
 import fun.cyhgraph.entity.UserCoupon;
 import fun.cyhgraph.exception.BaseException;
 import fun.cyhgraph.mapper.CouponMapper;
 import fun.cyhgraph.mapper.UserCouponMapper;
-import fun.cyhgraph.mapper.UserMapper;
+import fun.cyhgraph.service.MemberService;
 import fun.cyhgraph.service.UserCouponService;
 import fun.cyhgraph.vo.coupon.CouponLockResultVO;
 import fun.cyhgraph.vo.coupon.CouponVO;
@@ -35,7 +34,7 @@ public class UserCouponServiceImpl implements UserCouponService {
     @Autowired
     private UserCouponMapper userCouponMapper;
     @Autowired
-    private UserMapper userMapper;
+    private MemberService memberService;
 
     @Override
     public List<CouponVO> listReceiveList(Long storeId) {
@@ -214,11 +213,7 @@ public class UserCouponServiceImpl implements UserCouponService {
 
     @Override
     public boolean isUserMember(Integer userId) {
-        User user = userMapper.getById(userId);
-        if (user == null || user.getIsMember() == null || user.getIsMember() != 1) {
-            return false;
-        }
-        return user.getMemberExpireTime() == null || user.getMemberExpireTime().isAfter(LocalDateTime.now());
+        return memberService.isValidMember(userId);
     }
 
     @Override

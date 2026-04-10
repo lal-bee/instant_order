@@ -44,7 +44,6 @@ export const orderCancelAPI = (params: any) => {
 
 // 开始制作
 export const orderAcceptAPI = (params: any) => {
-  console.log('开始制作params', params)
   return request({
     url: '/order/confirm',
     method: 'put',
@@ -68,3 +67,4 @@ export const getOrderListByAPI = () => {
     method: 'get'
   })
 }
+

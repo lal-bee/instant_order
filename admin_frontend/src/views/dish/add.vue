@@ -44,7 +44,6 @@ const form = reactive({
   status: '',
   categoryId: ''
 })
-const count = ref(0)
 // 图片下的隐藏input框
 const inputRef1 = ref<HTMLInputElement | null>(null)
 const addRef = ref()
@@ -83,12 +82,10 @@ const chooseImg = () => {
 // 在文件管理器中选择图片后触发的改变事件：预览
 const onFileChange1 = (e: Event) => {
   // 获取用户选择的文件列表（伪数组）
-  console.log(e)
   const target = e.target as HTMLInputElement
   const files = target.files;
   if (files && files.length > 0) {
     // 选择了图片
-    console.log(files[0])
     // 文件 -> base64字符串  (可以发给后台)
     // 1. 创建 FileReader 对象
     const fr = new FileReader()
@@ -98,42 +95,25 @@ const onFileChange1 = (e: Event) => {
     fr.onload = () => {
       // 4. 通过 e.target.result 获取到读取的结果，值是字符串（base64 格式的字符串）
       form.pic = fr.result as string
-      console.log('avatar')
-      console.log(form.pic)
     }
   }
 }
 
 // 按钮 - 添加口味
 const addFlavor = () => {
-  console.log('addFlavor')
-  console.log('form.dishFlavors.length  ', form.dishFlavors.length)
-  console.log('leftDishFlavors.value.length  ', leftDishFlavors.value.length)
-  console.log('dishFlavorsData.length  ', dishFlavorsData.length)
   form.dishFlavors.push({ name: '', list: [] }) // JSON.parse(JSON.stringify(form.dishFlavorsData))
-  console.log('添加数据倒是改变watch啊！', form.dishFlavors)
-  // getLeftDishFlavors()
-  count.value++
 }
-const change = () => {
-  console.log('watch 函数监听 count 变化，执行相应change回调 - getLeftDishFlavor')
-}
-watch(count, change)
 
 
 // 按钮 - 删除口味
 const delFlavor = (name: string) => {
   let ind = form.dishFlavors.findIndex(item => item.name === name)
   form.dishFlavors.splice(ind, 1)
-  console.log('删除了', form.dishFlavors)
 }
 
 // 按钮 - 删除口味标签
 const delFlavorLabel = (index: number, ind: number) => {
-  console.log('delete ind', ind)
   // 打印 form.dishFlavors[index] 的类型
-  console.log(typeof form.dishFlavors[index])
-  console.log(form.dishFlavors[index].list)
   form.dishFlavors[index].list.splice(ind, 1)
 }
 
@@ -146,11 +126,9 @@ const getLeftDishFlavors = () => {
       arr.push(item)
     }
   })
-  console.log('getLeftDishFlavors', arr)
   leftDishFlavors.value = arr
 }
 const changeDishFlavors = () => {
-  console.log('watch 函数监听 dishFlavors 变化，执行相应change回调 - getLeftDishFlavor')
   getLeftDishFlavors()
 }
 // 使用 watch 函数监听 dishFlavors 属性的变化，变化就执行相应change回调，动态更新leftDishFlavors
@@ -159,9 +137,7 @@ watch(() => form.dishFlavors, changeDishFlavors, { deep: true })
 // 根据左侧选中的口味属性值，更新右侧框的口味数组元素
 // val: item.name,   key: 左侧框中的口味索引,   ind: 对应在dishFlavorsData中的口味索引
 const selectHandle = (val: any, key: any, ind: any) => {
-  console.log('根据左侧选中的口味属性值，更新右侧框的口味数组元素: selectHandle', val, key, ind)
   const arrDate = [...form.dishFlavors]
-  console.log('arrDate', arrDate)
   const index = dishFlavorsData.findIndex(item => item.name === val)
   arrDate[key] = JSON.parse(JSON.stringify(dishFlavorsData[index]))
   form.dishFlavors = arrDate
@@ -172,21 +148,17 @@ const submit = async (keep: any) => {
   const valid = await addRef.value.validate();
   if (valid) {
     let params: any = { ...form }
-    console.log('看看有没有拷贝成功？', params)
     // 需要先对口味数组进行json.stringfy序列化
     params.flavors = form.dishFlavors.map(obj => ({
       ...obj,
       list: JSON.stringify(obj.list)
     }))
     delete params.dishFlavors
-    console.log('看看有没有serialize成功？', params)
     // --- 处理完毕，开始提交 ---
     // 情况1：无路径参数，form.id保持默认值0，新增菜品
     if (form.id === 0) {
-      console.log('新增菜品')
       const res = await addDishAPI(params)
       if (res.data.code !== 0) {
-        console.log('新增菜品失败！')
         return false
       }
       ElMessage({
@@ -212,10 +184,8 @@ const submit = async (keep: any) => {
     }
     // 情况2：有路径参数，修改菜品
     else {
-      console.log('修改菜品')
       const res = await updateDishAPI(params)
       if (res.data.code !== 0) {
-        console.log('修改菜品失败！')
         return false
       }
       ElMessage({
@@ -228,7 +198,6 @@ const submit = async (keep: any) => {
     }
 
   } else {
-    console.log('form not valid!');
     return false;
   }
 }
@@ -243,18 +212,12 @@ const init = async () => {
   // 1. 获取菜品分类，等下菜品选择分类时有个下拉框，要展示所有菜品的分类
   // 由于复用分页查询的API，这里不需要分页且数据量较少，所以pageSize设置为100
   const { data: res } = await getCategoryPageListAPI({ page: 1, pageSize: 100, type: 1 })
-  console.log('分类列表')
-  console.log(res.data)
   categoryList.value = res.data.records
-  console.log('categoryList: ', categoryList.value)
   // 2. 由于当前页面可能是add也可能是update，所以要根据路由参数来判断是否需要getDishById
   if (route.query.id !== undefined) {
-    console.log('修改菜品页')
     form.id = route.query.id ? parseInt(route.query.id as string) : 0
     let dish = await getDishByIdAPI(form.id)
-    console.log(dish)
     Object.assign(form, dish.data.data)
-    console.log(form)
     // 3. 如果是修改页面，需要将口味数组中的list字符串反序列化
     form.dishFlavors =
       dish.data.data.flavors &&
@@ -265,7 +228,6 @@ const init = async () => {
     // 4. 初始化左侧未选中的口味数组
     getLeftDishFlavors()
   } else {
-    console.log('新增菜品页', form.id)
   }
 }
 
@@ -466,4 +428,5 @@ img {
   }
 }
 </style>
+
 

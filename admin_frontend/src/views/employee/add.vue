@@ -128,12 +128,10 @@ const chooseImg = () => {
 // 在文件管理器中选择图片后触发的改变事件：预览
 const onFileChange1 = (e: Event) => {
   // 获取用户选择的文件列表（伪数组）
-  console.log(e)
   const target = e.target as HTMLInputElement
   const files = target.files;
   if (files && files.length > 0) {
     // 选择了图片
-    console.log(files[0])
     // 文件 -> base64字符串  (可以发给后台)
     // 1. 创建 FileReader 对象
     const fr = new FileReader()
@@ -143,8 +141,6 @@ const onFileChange1 = (e: Event) => {
     fr.onload = () => {
       // 4. 通过 e.target.result 获取到读取的结果，值是字符串（base64 格式的字符串）
       form.pic = fr.result as string
-      console.log('avatar')
-      console.log(form.pic)
     }
   }
 }
@@ -154,12 +150,9 @@ const submit = async () => {
   try {
     const valid = await addRef.value.validate();
     if (valid) {
-      console.log('submit')
-      console.log(form)
       // 在这里执行表单提交操作
       const res = await addEmployeeAPI(form)
       if (res.data.code !== 0) {
-        console.log('新增员工失败！')
         return false
       }
       // 然后进行 消息提示，页面跳转 等操作
@@ -171,7 +164,6 @@ const submit = async () => {
         path: '/employee',
       })
     } else {
-      console.log('form not valid!');
       return false;
     }
   } catch (error) {
@@ -186,7 +178,6 @@ const cancel = () => {
 }
 
 const init = async () => {
-  console.log(route.query)
   const { data: res } = await getStoreListAPI()
   storeList.value = res.data || []
   if (isManager.value) {
@@ -290,3 +281,4 @@ img {
   margin: 30px 0 0 200px;
 }
 </style>
+

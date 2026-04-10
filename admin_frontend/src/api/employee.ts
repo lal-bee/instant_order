@@ -19,8 +19,6 @@ export const loginAPI = (params: any) => {
  * @returns 
  */
 export const registerAPI = (params: any) => {
-  console.log(params)
-  console.log({ ...params })
   return request({
     url: '/employee/register',
     method: 'post',
@@ -34,8 +32,6 @@ export const registerAPI = (params: any) => {
  * @returns 
  */
 export const fixPwdAPI = (params: any) => {
-  console.log(params)
-  console.log({ ...params })
   return request({
     url: '/employee/fixpwd',
     method: 'put',
@@ -62,7 +58,6 @@ export const addEmployeeAPI = (params: any) => {
  * @returns 
  */
 export const getEmployeePageListAPI = (params: any) => {
-  console.log(params)
   return request({
     url: '/employee/page',
     method: 'get',
@@ -78,16 +73,6 @@ export const getManagerOptionsAPI = (enabledOnly = true) => {
     url: '/employee/managers',
     method: 'get',
     params: { enabledOnly },
-  })
-}
-
-/**
- * 获取当前登录员工详情
- */
-export const getCurrentEmployeeAPI = (id: number) => {
-  return request({
-    url: `/employee/${id}`,
-    method: 'get',
   })
 }
 
@@ -122,7 +107,6 @@ export const updateEmployeeAPI = (params: any) => {
  * @returns 
  */
 export const updateEmployeeStatusAPI = (id: number) => {
-  console.log('员工id', id)
   return request({
     url: `/employee/status/${id}`,
     method: 'put'
@@ -152,3 +136,4 @@ export const deleteEmployeeBatchAPI = (ids: number[]) => {
     params: { ids: ids.join(',') },
   })
 }
+

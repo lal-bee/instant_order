@@ -55,14 +55,10 @@ const registerFn = async () => {
   const valid = await registerRef.value.validate()
   if (valid) {
     // 通过校验，拿到绑定的数据
-    console.log('注册的表单ref:  ', registerRef)
-    console.log('form.value:  ', form.value)
     // 1.调用注册接口，通过接口的return request，拿到promise对象
     const { data: res } = await registerAPI(form.value)
-    console.log(res)
     // 2.注册失败，响应拦截器已经ElMessage提示用户，这里直接返回
     if (res.code !== 0) {
-      console.log('注册失败！')
       return false
     }
     // 3.注册成功，提示用户
@@ -173,7 +169,7 @@ body {
   width: 100%;
   height: 100vh;
   background-size: cover;
-  background-image: url('../../assets/image/reg.jpg');
+  background-image: url('../../assets/image/login.png');
   overflow: hidden; // 防止页面滚动条闪动
 }
 
@@ -268,3 +264,4 @@ body {
   }
 }
 </style>
+

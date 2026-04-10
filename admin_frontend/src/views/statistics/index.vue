@@ -5,7 +5,7 @@ import UserStatistics from './components/UserStatistics.vue'
 import OrderStatistics from './components/OrderStatistics.vue'
 import Top from './components/Top10.vue'
 
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import {
   get1stAndToday,
   past7Day,
@@ -48,7 +48,6 @@ interface Top10Data {
 }
 
 const overviewData = ref({})
-// const flag = ref(2)
 const tateData = ref<string[]>([])
 const turnoverData = ref<TurnoverData>({
   dateList: [],
@@ -92,7 +91,6 @@ const getTurnoverStatisticsData = async (begin: string, end: string) => {
     dateList: data.data.dateList.split(','),
     turnoverList: data.data.turnoverList.split(',')
   }
-  console.log('获取到营业额统计数据：', turnoverData.value)
 }
 
 // chart2 用户统计
@@ -103,7 +101,6 @@ const getUserStatisticsData = async (begin: string, end: string) => {
     totalUserList: res.data.totalUserList.split(','),
     newUserList: res.data.newUserList.split(','),
   }
-  console.log('获取到用户统计数据：', userData.value)
 }
 
 // chart3 订单统计
@@ -119,7 +116,6 @@ const getOrderStatisticsData = async (begin: string, end: string) => {
     validOrderCount: res.data.validOrderCount,
     orderCompletionRate: res.data.orderCompletionRate
   }
-  console.log('获取到订单统计数据：', orderData.value)
 }
 
 // chart4 销量排名TOP10
@@ -129,7 +125,6 @@ const getTopData = async (begin: string, end: string) => {
     nameList: res.data.nameList.split(',').reverse(),
     numberList: res.data.numberList.split(',').reverse(),
   }
-  console.log('获取到销量top10统计数据：', top10Data.value)
 }
 
 // 获取当前选中的tab时间
@@ -157,11 +152,6 @@ const getTitleNum = (data: number) => {
 
 const nowIndex = ref(0);
 const tabsParam = ['昨日', '近7日', '近30日', '本周', '本月'];
-
-watch(nowIndex, (val) => {
-  // 在这里执行 flag 变化时的操作
-  console.log('Flag 变化为:', val);
-})
 
 const toggleTabs = (index: number) => {
   nowIndex.value = index;
@@ -366,7 +356,6 @@ const handleExport = async () => {
   margin: 20px;
   padding: 20px;
   border-radius: 10px;
-  /* justify-content: center; */
 }
 
 .pagination {

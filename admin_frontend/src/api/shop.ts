@@ -18,9 +18,9 @@ export const getStatusAPI = () => {
  * @returns
  */
 export const fixStatusAPI = (status: number) => {
-  console.log(status)
   return request({
     url: `/shop/${status}`,
     method: 'put'
   })
 }
+

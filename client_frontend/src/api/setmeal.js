@@ -20,3 +20,14 @@ export function getSetmealAPI(id) {
     url: `/user/setmeal/${id}`,
   })
 }
+
+/**
+ * 获取全部可用套餐（不按分类）
+ */
+export function getSetmealAllAPI(storeId) {
+  return request({
+    method: 'GET',
+    url: '/user/setmeal/all',
+    params: { storeId },
+  })
+}

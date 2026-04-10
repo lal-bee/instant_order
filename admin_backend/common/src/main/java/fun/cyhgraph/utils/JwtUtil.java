@@ -51,13 +51,12 @@ public class JwtUtil {
     public static Claims parseJWT(String secretKey, String token) {
         // 得到DefaultJwtParser
         log.info("来到这里校验token是否一致");
-        System.out.println(token);
         Claims claims = Jwts.parser()
                 // 设置签名的秘钥
                 .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
                 // 设置需要解析的jwt
                 .parseClaimsJws(token).getBody();
-        System.out.println("claims " + claims);
         return claims;
     }
 }
+

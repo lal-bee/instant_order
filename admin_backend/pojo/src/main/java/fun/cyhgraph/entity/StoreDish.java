@@ -15,6 +15,8 @@ public class StoreDish implements Serializable {
     private Long storeId;
     private Integer dishId;
     private Integer status;
+    private Integer stock;
+    private Integer warningStock;
     private Integer createUser;
     private Integer updateUser;
     private LocalDateTime createTime;

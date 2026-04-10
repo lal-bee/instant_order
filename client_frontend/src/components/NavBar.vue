@@ -6,7 +6,6 @@
           <img v-if="!backIconError" class="back" src="/icon/back.png" alt="返回" @error="backIconError = true" />
           <span v-else class="back-fallback">‹</span>
         </button>
-        <img class="brand" src="/images/logo.png" alt="logo" />
         <span class="logo-text">扫码点餐</span>
       </div>
     </div>
@@ -106,16 +105,10 @@ function back() {
   transform: translateY(-1px);
 }
 
-.brand {
-  height: 24px;
-  width: auto;
-}
-
 .logo-text {
   color: #fff;
   font-size: 13px;
-  padding-left: 10px;
-  border-left: 1px solid rgba(255,255,255,0.6);
+  font-weight: 600;
   white-space: nowrap;
 }
 

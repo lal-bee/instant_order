@@ -4,7 +4,6 @@ import fun.cyhgraph.constant.DishScopeConstant;
 import fun.cyhgraph.constant.StatusConstant;
 import fun.cyhgraph.context.BaseContext;
 import fun.cyhgraph.dto.StoreDishStatusDTO;
-import fun.cyhgraph.dto.StoreMenuConfigDTO;
 import fun.cyhgraph.dto.StoreSpecialDishDTO;
 import fun.cyhgraph.entity.Category;
 import fun.cyhgraph.entity.Dish;
@@ -73,11 +72,6 @@ public class StoreMenuServiceImpl implements StoreMenuService {
         Employee current = getCurrentEmployee();
         ensureCanViewStoreMenu(current);
         return categoryMapper.getList(1);
-    }
-
-    @Override
-    public void configStoreMenu(StoreMenuConfigDTO storeMenuConfigDTO) {
-        throw new BaseException("当前版本不再支持门店级标准菜上架配置，请直接修改菜品status");
     }
 
     @Override

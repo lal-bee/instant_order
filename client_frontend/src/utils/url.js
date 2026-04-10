@@ -65,3 +65,33 @@ export function getTableNo() {
 export function getStoreName() {
   return getStorageItem(SCAN_STORE_NAME_KEY)
 }
+
+export function resolveRedirectPath(redirect, fallback = '/') {
+  if (!redirect || typeof redirect !== 'string') return fallback
+  let target = redirect
+  try {
+    target = decodeURIComponent(redirect)
+  } catch (_) {}
+  if (!target.startsWith('/') || target.startsWith('//')) return fallback
+  return target
+}
+
+function pickTableId(tableId) {
+  if (tableId !== undefined && tableId !== null && String(tableId).trim()) {
+    return String(tableId).trim()
+  }
+  return getTableId()
+}
+
+export function buildLoginRouteQuery({ tableId, redirect } = {}) {
+  const query = {}
+  const finalTableId = pickTableId(tableId)
+  if (finalTableId) query.tableId = finalTableId
+  const finalRedirect = resolveRedirectPath(redirect, '')
+  if (finalRedirect) query.redirect = finalRedirect
+  return query
+}
+
+export function buildRegisterRouteQuery({ tableId, redirect } = {}) {
+  return buildLoginRouteQuery({ tableId, redirect })
+}

@@ -15,14 +15,6 @@ export const getStoreMenuCategoryListAPI = () => {
   })
 }
 
-export const saveStoreMenuConfigAPI = (params: { storeId: number; dishIds: number[] }) => {
-  return request({
-    url: '/store-menu/config',
-    method: 'put',
-    data: params,
-  })
-}
-
 export const addStoreSpecialDishAPI = (params: {
   storeId: number
   name: string

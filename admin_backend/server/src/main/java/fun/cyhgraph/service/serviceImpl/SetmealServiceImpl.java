@@ -138,6 +138,14 @@ public class SetmealServiceImpl implements SetmealService {
         return getList(categoryId);
     }
 
+    @Override
+    public List<Setmeal> getEnabledListByStoreId(Long storeId) {
+        // 当前套餐仍是总部维度，兼容保留 storeId 参数，避免前后端协议分叉
+        Setmeal setmeal = new Setmeal();
+        setmeal.setStatus(StatusConstant.ENABLE);
+        return setmealMapper.getList(setmeal);
+    }
+
     /**
      * 根据套餐id查询所有菜品
      * @param id

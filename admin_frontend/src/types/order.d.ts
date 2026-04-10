@@ -1,11 +1,3 @@
-// 提交订单返回的信息
-export type OrderSubmitVO = Partial<{
-  id: number // 订单ID
-  orderAmount: number // 订单金额
-  orderNumber: string // 订单编号
-  orderTime: Date // 下单时间
-}>
-
 // 订单信息
 export type Order = {
   id: number // 订单id
@@ -51,8 +43,3 @@ export type OrderVO = Order & {
   orderDetailList: OrderDetail[]
 }
 
-// 分页接口
-export type PageVO<T> = {
-  total: number
-  records: T[]
-}

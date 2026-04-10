@@ -2,10 +2,9 @@
 import { useRouter, useRoute, type RouteRecordRaw } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useUserInfoStore } from '@/store'
-import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { fixPwdAPI } from '@/api/employee'
 import { getStatusAPI, fixStatusAPI } from '@/api/shop'
-import { ElNotification } from 'element-plus'
 import { layoutChildrenRoutes } from '@/router'
 import { filterRoutesByRole, normalizeRole } from '@/utils/permission'
 
@@ -107,7 +106,6 @@ const activeMenuPath = computed(() => {
 // 初始化时获取营业状态
 const init = async () => {
   const { data: res } = await getStatusAPI()
-  console.log('初始化后的status status_active', res.data)
   status.value = res.data
   status_active.value = res.data
 }
@@ -131,8 +129,6 @@ const cancelForm = () => {
 }
 // 修改店铺状态
 const fixStatus = async () => {
-  console.log('修改后的店铺状态为')
-  console.log(status_active.value)
   const { data: res } = await fixStatusAPI(status_active.value)
   if (res.code != 0) return   // 修改失败信息会在相应拦截器中捕获并提示
   // 修改成功才改变status的值
@@ -151,8 +147,6 @@ const fixPwd = async () => {
       oldPwd: form.oldPwd,
       newPwd: form.newPwd,
     }
-    console.log('要提交的表单信息')
-    console.log(submitForm)
     const { data: res } = await fixPwdAPI(submitForm)
     if (res.code != 0) return   // 密码错误信息会在相应拦截器中捕获并提示
     ElMessage({
@@ -183,7 +177,6 @@ const quitFn = () => {
       })
       // 清除用户信息，包括token
       userInfoStore.userInfo = null
-      console.log(userInfoStore)
       router.push('/login')
     })
     .catch(() => {
@@ -195,91 +188,6 @@ const quitFn = () => {
 }
 
 // refs
-const websocket = ref<WebSocket | null>(null)
-const shopShow = ref(false)
-
-const audio1 = ref<HTMLAudioElement | null>(null)
-const audio2 = ref<HTMLAudioElement | null>(null)
-
-const webSocket = () => {
-  const clientId = Math.random().toString(36).slice(2)
-  const socketUrl = 'ws://localhost:8081/ws/' + clientId
-  console.log('socketUrl', socketUrl)
-
-  if (typeof WebSocket == 'undefined') {
-    console.log('当前浏览器无法接收实时报警信息，请使用谷歌浏览器！')
-    ElNotification({
-      title: '提示',
-      message: '当前浏览器无法接收实时报警信息，请使用谷歌浏览器！',
-      type: 'warning',
-      duration: 0,
-    })
-  } else {
-    websocket.value = new WebSocket(socketUrl)
-    websocket.value.onopen = () => {
-      console.log('浏览器WebSocket已打开')
-    }
-    websocket.value.onmessage = (msg) => {
-      console.log('接收到的消息', msg)
-      audio1.value && audio1.value.click()
-      // 重置音频，从头开始播放
-      audio1.value!.currentTime = 0
-      audio2.value!.currentTime = 0
-      // 解析服务器通过WebSocket发送的消息
-      const jsonMsg = JSON.parse(msg.data)
-      if (jsonMsg.type === 1) {
-        audio1.value!.play()
-      } else if (jsonMsg.type === 2) {
-        audio2.value!.play()
-      }
-      // 右上角弹窗提示
-      ElNotification({
-        title: jsonMsg.type === 1 ? '待制作' : '催单',
-        message: jsonMsg.type === 1
-          ? `<span>您有1个<span style="color:#419EFF">订单待处理</span>,${jsonMsg.content},请及时制作</span>`
-          : `${jsonMsg.content}<span style='color:#419EFF;cursor: pointer'>去处理</span>`,
-        duration: 0,
-        dangerouslyUseHTMLString: true,
-        onClick: () => {
-          router.push(`/order?orderId=${jsonMsg.orderId}`).catch((err) => {
-            console.log(err)
-          })
-          setTimeout(() => {
-            location.reload()
-          }, 100)
-        },
-      })
-    }
-    websocket.value.onerror = () => {
-      ElNotification({
-        title: '错误',
-        message: '服务器错误，无法接收实时报警信息',
-        type: 'error',
-        duration: 0,
-      })
-    }
-    websocket.value.onclose = () => {
-      console.log('WebSocket已关闭')
-    }
-  }
-}
-
-const handleClose = () => {
-  shopShow.value = false
-}
-
-// lifecycle hooks
-onMounted(() => {
-  document.addEventListener('click', handleClose)
-  // getStatus()
-  webSocket()
-})
-
-onBeforeUnmount(() => {
-  if (websocket.value) {
-    websocket.value.close()
-  }
-})
 </script>
 
 <template>
@@ -321,7 +229,6 @@ onBeforeUnmount(() => {
     </el-dialog>
     <el-container>
       <el-header>
-        <img src="../../assets/image/hanye_logo.png" class="logo" />
         <el-icon class="icon1" v-if="isCollapse">
           <Expand @click.stop="isCollapse = !isCollapse" />
         </el-icon>
@@ -329,14 +236,6 @@ onBeforeUnmount(() => {
           <Fold @click.stop="isCollapse = !isCollapse" />
         </el-icon>
         <div class="status">{{ status == 1 ? '营业中' : "打烊中" }}</div>
-        <div class="rightAudio">
-          <audio ref="audio1" hidden>
-            <source src="../../assets/preview.mp3" type="audio/mp3" />
-          </audio>
-          <audio ref="audio2" hidden>
-            <source src="../../assets/reminder.mp3" type="audio/mp3" />
-          </audio>
-        </div>
         <el-dropdown style="float: right">
           <el-button type="primary">
             {{ userInfoStore.userInfo ? userInfoStore.userInfo.account : '未登录' }}
@@ -353,7 +252,7 @@ onBeforeUnmount(() => {
       </el-header>
       <el-container class="box1">
         <!-- 左侧导航菜单区域 -->
-        <el-menu :width="isCollapse ? '640px' : '200px'" :default-active="activeMenuPath" :collapse="isCollapse"
+        <el-menu :style="{ width: isCollapse ? '85px' : '220px' }" :default-active="activeMenuPath" :collapse="isCollapse"
           background-color="#22aaee" text-color="#fff" unique-opened router>
           <!-- 加了router模式，就会在激活导航时以 :index 作为path进行路径跳转（nb!不用自己写路由了!） -->
           <!-- 根据不同情况选择menu-item/submenu进行遍历，所以外层套template遍历，里面组件做判断看是否该次遍历到自己 -->
@@ -403,13 +302,6 @@ onBeforeUnmount(() => {
   color: #ffffff;
   line-height: 60px;
 
-  .logo {
-    display: inline-block;
-    margin: 10px 20px;
-    width: 180px;
-    height: 40px;
-  }
-
   .icon1 {
     position: absolute;
     top: 18px;
@@ -429,22 +321,12 @@ onBeforeUnmount(() => {
   }
 }
 
-.rightAudio {
-  float: right;
-  // margin: 14px 20px;
-}
-
 .status-change {
   float: right;
   margin: 14px 20px;
   background-color: rgba(255, 255, 255, 0.3);
   border: none;
   color: #fff;
-}
-
-.user {
-  float: right;
-  margin-right: 20px;
 }
 
 .el-dropdown .el-button {
@@ -475,22 +357,6 @@ onBeforeUnmount(() => {
   flex: 1;
   background-color: #e9f5ff;
   color: #333;
-  /* text-align: center; */
-  /* line-height: 80px; */
-}
-
-a {
-  display: block;
-  height: 4rem;
-  color: #334455;
-  font-size: 20px;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-a:hover {
-  background-color: #445566;
-  color: #eee;
 }
 
 .el-footer {
@@ -554,9 +420,6 @@ a:hover {
     margin-top: 20px;
   }
 
-  // .el-radio__input.is-checked+.el-radio__label {
-  //   span {}
-  // }
 }
 
 .el-badge__content.is-fixed {
@@ -581,12 +444,40 @@ a:hover {
 .el-menu {
   padding: 30px 0 0 0;
   background-color: #445566;
+  width: 220px;
+  overflow-x: hidden;
+  border-right: none;
 }
 
 .el-menu-item {
   margin: 10px;
-  padding-right: 30px;
+  padding-right: 12px;
   border-radius: 10px;
+}
+
+.el-sub-menu__title {
+  margin: 10px;
+  border-radius: 10px;
+  padding-right: 12px;
+}
+
+.el-menu-item,
+.el-sub-menu__title {
+  display: flex;
+  align-items: center;
+  width: calc(100% - 20px);
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.el-menu-item > span,
+.el-sub-menu__title > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .el-menu-item.is-active {
@@ -597,4 +488,10 @@ a:hover {
 .el-menu--collapse {
   width: 85px;
 }
+
+.el-menu--collapse .el-menu-item,
+.el-menu--collapse .el-sub-menu__title {
+  width: calc(100% - 20px);
+}
 </style>
+

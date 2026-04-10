@@ -49,12 +49,9 @@ const submit = async () => {
   try {
     const valid = await addRef.value.validate();
     if (valid) {
-      console.log('submit')
-      console.log(form)
       // 在这里执行表单提交操作
       const res = await addCategoryAPI(form)
       if (res.data.code !== 0) {
-        console.log('新增分类失败！')
         return false
       }
       // 然后进行 消息提示，页面跳转 等操作
@@ -66,7 +63,6 @@ const submit = async () => {
         path: '/category',
       })
     } else {
-      console.log('form not valid!');
       return false;
     }
   } catch (error) {
@@ -81,7 +77,6 @@ const cancel = () => {
 }
 
 const init = async () => {
-  console.log(route.query)
 }
 
 init()
@@ -141,4 +136,5 @@ img {
   margin: 30px 0 0 200px;
 }
 </style>
+
 

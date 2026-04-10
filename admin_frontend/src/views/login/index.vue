@@ -33,7 +33,6 @@ const loginFn = async () => {
   if (valid) {
     // 调用登录接口
     const { data: res } = await loginAPI(form.value)
-    console.log(res)
     // 登录失败，提示用户，这个提示已经在响应拦截器中统一处理了，这里直接return就行
     if (res.code !== 0) {
       return false
@@ -42,7 +41,6 @@ const loginFn = async () => {
     ElMessage.success('登录成功')
     // 把后端返回的当前登录用户信息(包括token)存储到Pinia里
     userInfoStore.userInfo = res.data
-    console.log(userInfoStore.userInfo)
     // 跳转到首页
     router.push('/')
   } else {
@@ -140,21 +138,20 @@ body {
   width: 100%;
   height: 100vh;
   background-size: cover;
-  background-image: url('../../assets/image/login.jpg');
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.78) 0 7%, rgba(255, 255, 255, 0) 40%),
+    conic-gradient(from 40deg at 50% 50%,
+      rgba(224, 236, 252, 0.9) 0deg 42deg,
+      rgba(205, 187, 241, 0.78) 42deg 130deg,
+      rgba(130, 159, 226, 0.78) 130deg 224deg,
+      rgba(152, 198, 241, 0.82) 224deg 305deg,
+      rgba(232, 240, 252, 0.88) 305deg 360deg
+    );
   overflow: hidden; // 防止页面滚动条闪动
 }
 
 .background::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  /* 黑色半透明 */
-  z-index: 1;
-  /* 确保伪元素在背景图之上 */
+  content: none;
 }
 
 .rain {
@@ -232,3 +229,4 @@ body {
   }
 }
 </style>
+
